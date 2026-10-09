@@ -1,0 +1,24 @@
+{
+  "name": "sinering-sleep",
+  "version": "1.0.0",
+  "description": "SineRing Sleep - Monitor de Sueño Inteligente Ultraligero y de Bajo Consumo para Anillos R99 / YCBT",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "sinering",
+    "sleep",
+    "smart-ring",
+    "ycbt",
+    "health"
+  ],
+  "author": "Sinergia",
+  "license": "ISC",
+  "dependencies": {
+    "@capacitor-community/bluetooth-le": "^7.3.2",
+    "@capacitor/android": "^7.6.9",
+    "@capacitor/cli": "^7.6.9",
+    "@capacitor/core": "^7.6.9"
+  }
+}

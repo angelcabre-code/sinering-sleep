@@ -1,0 +1,17 @@
+{
+  "appId": "com.sinergia.sineringsleep",
+  "appName": "SineRing Sleep",
+  "webDir": "www",
+  "server": {
+    "androidScheme": "https"
+  },
+  "plugins": {
+    "BluetoothLe": {
+      "displayStrings": {
+        "scanning": "Buscando tu anillo SineRing...",
+        "connecting": "Conectando al anillo...",
+        "available": "Anillo conectado"
+      }
+    }
+  }
+}
