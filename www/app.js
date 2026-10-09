@@ -179,6 +179,7 @@ async function connectToDevice(deviceId) {
       if (dotConn) dotConn.classList.remove('connected');
       if (txtConn) txtConn.textContent = 'Desconectado';
       logBle('BLE', 'DISCONNECT', `Desconectado de ${discId}`);
+      updateSettingsUI();
       setTimeout(() => connectToDevice(deviceId), 3000);
     });
 
@@ -188,6 +189,7 @@ async function connectToDevice(deviceId) {
     if (dotConn) dotConn.classList.add('connected');
     if (txtConn) txtConn.textContent = 'Conectado';
     logBle('BLE', 'CONNECT', `Conectado a ${deviceId}`);
+    updateSettingsUI();
 
     // Suscripción a notificaciones
     await window.BleClient.startNotifications(deviceId, YCBT_SERVICE_UUID, YCBT_CMD_CHAR_UUID, (val) => {
@@ -205,6 +207,7 @@ async function connectToDevice(deviceId) {
     console.error("[BLE] Error conectando:", e);
     if (dotConn) dotConn.classList.remove('connected');
     if (txtConn) txtConn.textContent = 'Error BLE';
+    updateSettingsUI();
   }
 }
 
@@ -314,6 +317,11 @@ function updateBatteryUI(bat) {
 function onIntervalChange(val) {
   sampleIntervalMinutes = parseInt(val, 10);
   localStorage.setItem('sinering_sleep_interval', sampleIntervalMinutes);
+  const summaryEl = document.getElementById('lbl-sampling-interval-summary');
+  if (summaryEl) summaryEl.textContent = `Muestreo: cada ${sampleIntervalMinutes} min`;
+  const selSettings = document.getElementById('sel-hr-interval');
+  if (selSettings) selSettings.value = sampleIntervalMinutes.toString();
+
   if (isConnected) {
     sendYcbtFrame(0x01, 0x0C, [0x01, sampleIntervalMinutes]);
   }
@@ -636,84 +644,28 @@ function saveReportToHistory(report) {
   }
 }
 
-// Exportar copia de seguridad (JSON)
-function exportBackupData() {
-  try {
-    const hist = JSON.parse(localStorage.getItem('sinering_sleep_history') || '[]');
-    if (hist.length === 0) {
-      alert("ℹ️ No hay registros de sueño para exportar aún.");
-      return;
-    }
+// -------------------------------------------------------------
+// 5.c PESTAÑAS (TABS) & NAVEGACIÓN
+// -------------------------------------------------------------
+function switchTab(tabId) {
+  const tabs = ['monitor', 'history', 'settings'];
+  tabs.forEach(t => {
+    const content = document.getElementById('tab-' + t);
+    const nav = document.getElementById('nav-' + t);
+    if (content) content.classList.toggle('active', t === tabId);
+    if (nav) nav.classList.toggle('active', t === tabId);
+  });
 
-    const backupObj = {
-      app: "SineRing Sleep",
-      version: "1.0.0",
-      exportDate: new Date().toISOString(),
-      nightsCount: hist.length,
-      sessions: hist
-    };
-
-    const jsonStr = JSON.stringify(backupObj, null, 2);
-    const blob = new Blob([jsonStr], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const nowStr = new Date().toISOString().split('T')[0];
-
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `SineRing_Sleep_Backup_${nowStr}.json`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-
-    alert(`✓ Copia de seguridad descargada con éxito (${hist.length} noches registradas).\n\nGuarda este archivo en tu Google Drive o Documentos para conservarlo pase lo que pase con el teléfono.`);
-  } catch(e) {
-    alert("Error al exportar copia de seguridad: " + (e.message || e));
+  if (tabId === 'history') {
+    renderCalendar();
+    renderHistoryList();
+  } else if (tabId === 'settings') {
+    updateSettingsUI();
   }
 }
 
-// Restaurar copia de seguridad (JSON)
-function importBackupData(event) {
-  const file = event.target.files[0];
-  if (!file) return;
-
-  const reader = new FileReader();
-  reader.onload = (e) => {
-    try {
-      const data = JSON.parse(e.target.result);
-      const sessions = Array.isArray(data) ? data : data.sessions;
-      if (!sessions || !Array.isArray(sessions) || sessions.length === 0) {
-        alert("⚠️ El archivo seleccionado no contiene un formato de respaldo válido de SineRing Sleep.");
-        return;
-      }
-
-      let currentHist = JSON.parse(localStorage.getItem('sinering_sleep_history') || '[]');
-      const dateMap = new Map();
-      currentHist.forEach(s => dateMap.set(s.date, s));
-      sessions.forEach(s => dateMap.set(s.date, s)); // sobrescribe / añade
-
-      const merged = Array.from(dateMap.values()).sort((a, b) => (b.date || "").localeCompare(a.date || ""));
-      localStorage.setItem('sinering_sleep_history', JSON.stringify(merged));
-
-      if (db) {
-        const tx = db.transaction("sleep_sessions", "readwrite");
-        const store = tx.objectStore("sleep_sessions");
-        sessions.forEach(s => store.put(s));
-      }
-
-      renderCalendar();
-      if (merged.length > 0) displayMorningReport(merged[0]);
-      alert(`✓ ¡Restauración completada!\nSe han cargado ${sessions.length} noches de sueño al historial.`);
-    } catch(err) {
-      alert("Error procesando archivo de respaldo: " + (err.message || err));
-    }
-  };
-  reader.readAsText(file);
-  event.target.value = "";
-}
-
 // -------------------------------------------------------------
-// 5.c CALENDARIO DE CALIDAD DE SUEÑO
+// 5.d CALENDARIO DE CALIDAD DE SUEÑO & VISOR DE HISTÓRICO
 // -------------------------------------------------------------
 let calDate = new Date();
 
@@ -754,7 +706,6 @@ function renderCalendar() {
   const firstDayObj = new Date(year, month, 1);
   const startDay = (firstDayObj.getDay() + 6) % 7;
   const daysInMonth = new Date(year, month + 1, 0).getDate();
-
   const todayStr = new Date().toISOString().split('T')[0];
 
   // Celdas vacías del principio
@@ -795,8 +746,7 @@ function renderCalendar() {
       cell.onclick = () => {
         document.querySelectorAll('.cal-day').forEach(el => el.classList.remove('selected'));
         cell.classList.add('selected');
-        displayMorningReport(session);
-        document.getElementById('card-report')?.scrollIntoView({ behavior: 'smooth' });
+        displayHistoryDetail(session);
       };
     }
 
@@ -827,6 +777,95 @@ function renderCalendar() {
   }
 }
 
+function displayHistoryDetail(session) {
+  const card = document.getElementById('card-history-detail');
+  if (!card) return;
+  card.style.display = 'block';
+
+  document.getElementById('hist-detail-date').textContent = session.date || 'Noche';
+  document.getElementById('hist-detail-score').textContent = session.sleep_score || 80;
+  document.getElementById('hist-detail-range').textContent = `${session.start_time} - ${session.end_time}`;
+  
+  const h = Math.floor((session.total_duration_minutes || 0) / 60);
+  const m = (session.total_duration_minutes || 0) % 60;
+  document.getElementById('hist-detail-total').textContent = `${h}h ${m < 10 ? '0' : ''}${m}m`;
+
+  const deep = session.deep_sleep_minutes || 0;
+  const rem = session.rem_sleep_minutes || 0;
+  const light = session.light_sleep_minutes || 0;
+  const awake = session.awake_minutes || 0;
+  const tot = Math.max(deep + rem + light + awake, 1);
+
+  document.getElementById('hist-bar-deep').style.flex = Math.max(deep, 1);
+  document.getElementById('hist-bar-rem').style.flex = Math.max(rem, 1);
+  document.getElementById('hist-bar-light').style.flex = Math.max(light, 1);
+  document.getElementById('hist-bar-awake').style.flex = Math.max(awake, 1);
+
+  document.getElementById('hist-lbl-deep').textContent = `${deep}m (${Math.round(deep/tot*100)}%)`;
+  document.getElementById('hist-lbl-rem').textContent = `${rem}m (${Math.round(rem/tot*100)}%)`;
+  document.getElementById('hist-lbl-light').textContent = `${light}m (${Math.round(light/tot*100)}%)`;
+  document.getElementById('hist-lbl-awake').textContent = `${awake}m (${Math.round(awake/tot*100)}%)`;
+
+  // Renderizar hipnograma histórico
+  const path = document.getElementById('hist-hypno-path');
+  const points = session.points || [];
+  if (path) {
+    if (points && points.length >= 2) {
+      const coords = points.map((p, i) => {
+        const x = (i / (points.length - 1)) * 360;
+        const clampedBpm = Math.min(Math.max(p.bpm, 45), 90);
+        const y = 115 - ((clampedBpm - 45) / 45) * 100;
+        return `${x.toFixed(1)},${y.toFixed(1)}`;
+      });
+      path.setAttribute('d', `M ${coords.join(' L ')}`);
+    } else {
+      path.setAttribute('d', '');
+    }
+  }
+
+  const diag = document.getElementById('hist-detail-diag');
+  if (diag) {
+    diag.innerHTML = `<strong>Calidad:</strong> Registrados <strong>${deep} min de sueño profundo</strong>. Descenso cardíaco estimado: <strong>${session.dip_percent || 12}%</strong>. Frecuencia cardíaca media en reposo: <strong>${session.avg_hr || 58} lpm</strong>.`;
+  }
+
+  card.scrollIntoView({ behavior: 'smooth' });
+}
+
+function renderHistoryList() {
+  const container = document.getElementById('history-list');
+  if (!container) return;
+
+  let hist = [];
+  try {
+    hist = JSON.parse(localStorage.getItem('sinering_sleep_history') || '[]');
+  } catch(e) {}
+
+  if (hist.length === 0) {
+    container.innerHTML = '<div style="font-size:0.78rem; color:var(--text-muted); text-align:center; padding:1rem;">No hay registros guardados aún.</div>';
+    return;
+  }
+
+  container.innerHTML = '';
+  hist.forEach((h) => {
+    const hours = Math.floor(h.total_duration_minutes / 60);
+    const mins = h.total_duration_minutes % 60;
+    const item = document.createElement('div');
+    item.style.cssText = 'background:rgba(255,255,255,0.03); border:1px solid var(--bg-card-border); padding:0.75rem 0.9rem; border-radius:14px; display:flex; justify-content:space-between; align-items:center; cursor:pointer;';
+    item.innerHTML = `
+      <div>
+        <div style="font-weight:700; font-size:0.85rem; color:var(--text-main);">${h.date} (${h.start_time} - ${h.end_time})</div>
+        <div style="font-size:0.75rem; color:var(--text-sub);">Total: ${hours}h ${mins}m • Profundo: ${h.deep_sleep_minutes}m</div>
+      </div>
+      <div style="text-align:right;">
+        <div style="font-size:1.15rem; font-weight:900; color:var(--accent-cyan);">${h.sleep_score}</div>
+        <div style="font-size:0.62rem; color:var(--text-muted); font-weight:700;">SCORE</div>
+      </div>
+    `;
+    item.onclick = () => displayHistoryDetail(h);
+    container.appendChild(item);
+  });
+}
+
 function renderHypnogramChart(points) {
   const path = document.getElementById('hypno-path');
   const txtCount = document.getElementById('txt-chart-points');
@@ -839,9 +878,6 @@ function renderHypnogramChart(points) {
     return;
   }
 
-  // Escalar puntos a SVG (viewBox: 360 x 120)
-  // X: 0 .. 360
-  // Y: BPM mapeado entre 45 lpm (y=115) y 90 lpm (y=15)
   const coords = points.map((p, i) => {
     const x = (i / (points.length - 1)) * 360;
     const clampedBpm = Math.min(Math.max(p.bpm, 45), 90);
@@ -849,13 +885,79 @@ function renderHypnogramChart(points) {
     return `${x.toFixed(1)},${y.toFixed(1)}`;
   });
 
-  const d = `M ${coords.join(' L ')}`;
-  path.setAttribute('d', d);
+  path.setAttribute('d', `M ${coords.join(' L ')}`);
 }
 
 // -------------------------------------------------------------
-// 6. PANTALLA AMBIENTE OLED
+// 6. AJUSTES, TEMAS Y DISPOSITIVO BLE
 // -------------------------------------------------------------
+function setThemeMode(theme) {
+  document.body.classList.toggle('light-theme', theme === 'light');
+  localStorage.setItem('sinering_sleep_theme', theme);
+  const sel = document.getElementById('sel-theme');
+  if (sel) sel.value = theme;
+}
+
+function updateSettingsUI() {
+  const devEl = document.getElementById('settings-device-id');
+  const stEl = document.getElementById('settings-conn-state');
+  if (devEl) devEl.textContent = connectedDeviceId || 'Ninguno';
+  if (stEl) {
+    stEl.textContent = isConnected ? 'Conectado ✓' : 'Desconectado';
+    stEl.style.color = isConnected ? '#10b981' : '#ef4444';
+  }
+}
+
+async function forceReconnectBle() {
+  if (connectedDeviceId) {
+    await connectToDevice(connectedDeviceId);
+  } else {
+    await scanAndConnectBLE();
+  }
+  updateSettingsUI();
+}
+
+async function unpairRing() {
+  if (!confirm("¿Deseas desvincular el anillo inteligente guardado? Podrás volver a vincularlo en cualquier momento.")) return;
+  if (isNativeBle && connectedDeviceId && isConnected) {
+    try {
+      await window.BleClient.disconnect(connectedDeviceId);
+    } catch(e) {}
+  }
+  connectedDeviceId = null;
+  isConnected = false;
+  localStorage.removeItem('sinering_sleep_device_id');
+
+  const txtConn = document.getElementById('txt-conn');
+  const dotConn = document.getElementById('dot-conn');
+  if (dotConn) dotConn.classList.remove('connected');
+  if (txtConn) txtConn.textContent = 'Desconectado';
+
+  updateSettingsUI();
+  alert("✓ Anillo desvinculado con éxito. Ahora puedes buscar y emparejar otro dispositivo.");
+}
+
+async function clearAllData() {
+  if (!confirm("⚠️ ¿Estás seguro de que deseas borrar todo el historial de sueño guardado? Esta acción es irreversible.")) return;
+
+  localStorage.removeItem('sinering_sleep_history');
+  if (db) {
+    try {
+      const tx = db.transaction("sleep_sessions", "readwrite");
+      tx.objectStore("sleep_sessions").clear();
+    } catch(e) {}
+  }
+
+  renderCalendar();
+  renderHistoryList();
+  const cardDetail = document.getElementById('card-history-detail');
+  if (cardDetail) cardDetail.style.display = 'none';
+  const cardReport = document.getElementById('card-report');
+  if (cardReport) cardReport.style.display = 'none';
+
+  alert("✓ Todo el historial de sueño ha sido borrado.");
+}
+
 function enterAmbientMode() {
   const screen = document.getElementById('ambient-screen');
   if (screen) screen.style.display = 'flex';
@@ -884,12 +986,18 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (ambClock) ambClock.textContent = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   }, 1000);
 
-  // Inicializar almacenamiento persistente dual (IndexedDB + localStorage)
+  // Inicializar almacenamiento persistente dual automático (IndexedDB + localStorage)
   await initIndexedDb();
 
-  // Restaurar selector de intervalo guardado
+  // Restaurar tema visual preferido
+  const savedTheme = localStorage.getItem('sinering_sleep_theme') || 'dark';
+  setThemeMode(savedTheme);
+
+  // Restaurar selector de intervalo y resumen
   const selInt = document.getElementById('sel-hr-interval');
   if (selInt) selInt.value = sampleIntervalMinutes.toString();
+  const summaryEl = document.getElementById('lbl-sampling-interval-summary');
+  if (summaryEl) summaryEl.textContent = `Muestreo: cada ${sampleIntervalMinutes} min`;
 
   // Restaurar sesión activa si el usuario cerró la app mientras dormía
   try {
@@ -909,8 +1017,10 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   } catch(e) {}
 
-  // Renderizar calendario
+  // Renderizar vistas iniciales
   renderCalendar();
+  renderHistoryList();
+  updateSettingsUI();
 
   // Mostrar último reporte guardado si existe
   try {

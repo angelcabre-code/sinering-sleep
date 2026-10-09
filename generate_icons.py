@@ -97,23 +97,23 @@ def draw_sleep_ring_icon(size: int, is_round: bool = False, is_foreground: bool 
         draw.line([(x + w, y), (x, y + h)], fill=color, width=thickness, joint="round")
         draw.line([(x, y + h), (x + w, y + h)], fill=color, width=thickness, joint="round")
 
-    # Z grande (principal, saliendo del anillo)
+    # Z grande (principal, saliendo del anillo) en naranja neón
     z1_x = canvas_size * 0.56
     z1_y = canvas_size * 0.38
     draw_z(z1_x, z1_y, canvas_size * 0.17, canvas_size * 0.16, int(5.5 * scale),
-           color=(245, 243, 255, 255), glow_color=(192, 132, 252, 90))
+           color=(255, 130, 0, 255), glow_color=(255, 80, 0, 120))
 
-    # Z mediana (flotando más arriba a la derecha)
+    # Z mediana (flotando más arriba a la derecha) en naranja cálido
     z2_x = canvas_size * 0.72
     z2_y = canvas_size * 0.22
     draw_z(z2_x, z2_y, canvas_size * 0.12, canvas_size * 0.11, int(4.0 * scale),
-           color=(224, 231, 255, 240), glow_color=(167, 139, 250, 80))
+           color=(255, 155, 10, 245), glow_color=(255, 105, 0, 100))
 
-    # z pequeña (más tenue)
+    # z pequeña (más tenue) en naranja ámbar
     z3_x = canvas_size * 0.82
     z3_y = canvas_size * 0.11
     draw_z(z3_x, z3_y, canvas_size * 0.08, canvas_size * 0.07, int(2.8 * scale),
-           color=(199, 210, 254, 200), glow_color=(139, 92, 246, 60))
+           color=(255, 180, 40, 225), glow_color=(255, 130, 0, 80))
 
     # Estrellitas brillantes sutiles
     for sx_rel, sy_rel in [(0.42, 0.20), (0.76, 0.52), (0.88, 0.32)]:
@@ -152,12 +152,12 @@ def generate_svg():
   <!-- Sensores del anillo -->
   <circle cx="135" cy="275" r="6" fill="#34d399" filter="url(#glow)"/>
   <circle cx="160" cy="210" r="6" fill="#34d399" filter="url(#glow)"/>
-  <!-- Z grande -->
-  <path d="M 285 195 L 370 195 L 290 275 L 375 275" fill="none" stroke="#f5f3ff" stroke-width="22" stroke-linecap="round" stroke-linejoin="round" filter="url(#glow)"/>
-  <!-- Z mediana -->
-  <path d="M 365 115 L 425 115 L 370 170 L 430 170" fill="none" stroke="#e0e7ff" stroke-width="16" stroke-linecap="round" stroke-linejoin="round" filter="url(#glow)"/>
-  <!-- z pequeña -->
-  <path d="M 420 55 L 460 55 L 425 90 L 465 90" fill="none" stroke="#c7d2fe" stroke-width="11" stroke-linecap="round" stroke-linejoin="round" filter="url(#glow)"/>
+  <!-- Z grande (naranja) -->
+  <path d="M 285 195 L 370 195 L 290 275 L 375 275" fill="none" stroke="#ff7700" stroke-width="22" stroke-linecap="round" stroke-linejoin="round" filter="url(#glow)"/>
+  <!-- Z mediana (naranja) -->
+  <path d="M 365 115 L 425 115 L 370 170 L 430 170" fill="none" stroke="#ff9900" stroke-width="16" stroke-linecap="round" stroke-linejoin="round" filter="url(#glow)"/>
+  <!-- z pequeña (naranja) -->
+  <path d="M 420 55 L 460 55 L 425 90 L 465 90" fill="none" stroke="#ffb700" stroke-width="11" stroke-linecap="round" stroke-linejoin="round" filter="url(#glow)"/>
 </svg>'''
     with open("www/icon.svg", "w") as f:
         f.write(svg_content)

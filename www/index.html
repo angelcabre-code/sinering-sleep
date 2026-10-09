@@ -17,11 +17,25 @@
       --accent-sleep: #8b5cf6;
       --accent-sleep-glow: rgba(139, 92, 246, 0.35);
       --accent-cyan: #38bdf8;
+      --accent-orange: #f97316;
       --accent-deep: #6366f1;
       --accent-rem: #ec4899;
       --accent-light: #06b6d4;
       --accent-awake: #f59e0b;
       --accent-green: #10b981;
+      --nav-bg: rgba(15, 23, 42, 0.92);
+    }
+
+    body.light-theme {
+      --bg-dark: #f8fafc;
+      --bg-card: rgba(255, 255, 255, 0.9);
+      --bg-card-border: rgba(0, 0, 0, 0.08);
+      --text-main: #0f172a;
+      --text-sub: #475569;
+      --text-muted: #94a3b8;
+      --accent-sleep: #7c3aed;
+      --accent-sleep-glow: rgba(124, 58, 237, 0.2);
+      --nav-bg: rgba(255, 255, 255, 0.95);
     }
 
     * {
@@ -35,24 +49,25 @@
     body {
       background-color: var(--bg-dark);
       background-image: 
-        radial-gradient(at 0% 0%, rgba(30, 27, 75, 0.6) 0px, transparent 55%),
-        radial-gradient(at 100% 100%, rgba(15, 23, 42, 0.8) 0px, transparent 55%);
+        radial-gradient(at 0% 0%, rgba(30, 27, 75, 0.5) 0px, transparent 55%),
+        radial-gradient(at 100% 100%, rgba(15, 23, 42, 0.7) 0px, transparent 55%);
       color: var(--text-main);
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       min-height: 100vh;
       display: flex;
       flex-direction: column;
       overflow-x: hidden;
-      padding: env(safe-area-inset-top, 16px) env(safe-area-inset-right, 16px) env(safe-area-inset-bottom, 16px) env(safe-area-inset-left, 16px);
+      padding: env(safe-area-inset-top, 16px) env(safe-area-inset-right, 16px) calc(75px + env(safe-area-inset-bottom, 16px)) env(safe-area-inset-left, 16px);
+      transition: background-color 0.3s, color 0.3s;
     }
 
     header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 0.8rem 0.4rem;
+      padding: 0.7rem 0.2rem;
       border-bottom: 1px solid var(--bg-card-border);
-      margin-bottom: 1rem;
+      margin-bottom: 0.8rem;
     }
 
     .brand {
@@ -72,7 +87,7 @@
       font-size: 1.15rem;
       font-weight: 800;
       letter-spacing: -0.02em;
-      background: linear-gradient(135deg, #fff, #c084fc);
+      background: linear-gradient(135deg, var(--text-main), #c084fc);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
     }
@@ -108,36 +123,101 @@
       box-shadow: 0 0 8px #10b981;
     }
 
+    /* Pestañas */
+    .tab-content {
+      display: none;
+      animation: fadeIn 0.25s ease;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Barra de Navegación Inferior */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: calc(64px + env(safe-area-inset-bottom, 0px));
+      padding-bottom: env(safe-area-inset-bottom, 0px);
+      background: var(--nav-bg);
+      backdrop-filter: blur(25px);
+      -webkit-backdrop-filter: blur(25px);
+      border-top: 1px solid var(--bg-card-border);
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      z-index: 1000;
+    }
+
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      flex: 1;
+      height: 100%;
+      cursor: pointer;
+      color: var(--text-muted);
+      transition: color 0.2s, transform 0.15s;
+    }
+
+    .nav-item:active {
+      transform: scale(0.94);
+    }
+
+    .nav-item.active {
+      color: var(--accent-sleep);
+    }
+
+    .nav-icon {
+      font-size: 1.35rem;
+      line-height: 1;
+    }
+
+    .nav-label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+
     .card {
       background: var(--bg-card);
       border: 1px solid var(--bg-card-border);
       border-radius: 20px;
-      padding: 1.25rem;
+      padding: 1.15rem;
       margin-bottom: 1rem;
       backdrop-filter: blur(20px);
       -webkit-backdrop-filter: blur(20px);
-      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
     }
 
     /* Reloj ambiental grande */
     .clock-hero {
       text-align: center;
-      padding: 1.2rem 0 0.8rem;
+      padding: 0.8rem 0 0.6rem;
     }
 
     .clock-time {
-      font-size: 3.2rem;
+      font-size: 3rem;
       font-weight: 900;
       letter-spacing: -0.03em;
-      color: #fff;
-      text-shadow: 0 0 25px rgba(139, 92, 246, 0.4);
+      color: var(--text-main);
+      text-shadow: 0 0 25px rgba(139, 92, 246, 0.35);
       line-height: 1;
-      margin-bottom: 0.3rem;
+      margin-bottom: 0.25rem;
       font-variant-numeric: tabular-nums;
     }
 
     .clock-date {
-      font-size: 0.85rem;
+      font-size: 0.82rem;
       color: var(--text-sub);
       text-transform: capitalize;
     }
@@ -188,11 +268,21 @@
       gap: 0.4rem;
     }
 
+    .btn-secondary:active {
+      background: rgba(255, 255, 255, 0.12);
+    }
+
+    .btn-danger {
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      color: #ef4444;
+    }
+
     /* Estado durmiendo */
     .session-active-box {
       border: 1px solid rgba(139, 92, 246, 0.4);
       animation: pulseBorder 3s infinite ease-in-out;
-      background: linear-gradient(180deg, rgba(30, 27, 75, 0.5) 0%, rgba(15, 23, 42, 0.8) 100%);
+      background: linear-gradient(180deg, rgba(30, 27, 75, 0.4) 0%, rgba(15, 23, 42, 0.8) 100%);
     }
 
     @keyframes pulseBorder {
@@ -205,7 +295,7 @@
       width: 100%;
       height: 120px;
       position: relative;
-      margin: 1rem 0;
+      margin: 0.8rem 0;
       background: rgba(0, 0, 0, 0.25);
       border-radius: 12px;
       overflow: hidden;
@@ -296,32 +386,17 @@
       background: rgba(0, 0, 0, 0.3);
       border: 1px solid var(--bg-card-border);
       color: var(--text-main);
-      padding: 0.5rem 0.8rem;
-      border-radius: 10px;
-      font-size: 0.82rem;
+      padding: 0.65rem 0.85rem;
+      border-radius: 12px;
+      font-size: 0.85rem;
       width: 100%;
       outline: none;
-      margin-top: 0.4rem;
+      margin-top: 0.3rem;
     }
 
     select.glass-select option {
       background: #0f172a;
       color: #fff;
-    }
-
-    /* Terminal de depuración plegable */
-    #ble-console {
-      max-height: 120px;
-      overflow-y: auto;
-      font-family: monospace;
-      font-size: 0.7rem;
-      background: rgba(0, 0, 0, 0.4);
-      padding: 0.5rem;
-      border-radius: 10px;
-      border: 1px solid var(--bg-card-border);
-      color: var(--text-sub);
-      line-height: 1.4;
-      display: none;
     }
 
     /* Calendario de Calidad de Sueño */
@@ -334,8 +409,8 @@
 
     .cal-title {
       font-weight: 800;
-      font-size: 0.95rem;
-      color: #fff;
+      font-size: 1rem;
+      color: var(--text-main);
       display: flex;
       align-items: center;
       gap: 0.4rem;
@@ -428,7 +503,7 @@
     }
 
     .cal-day.has-data .cal-day-num {
-      color: #fff;
+      color: var(--text-main);
     }
 
     .cal-score-badge {
@@ -459,6 +534,22 @@
       color: #fbbf24;
       border: 1px solid rgba(245, 158, 11, 0.4);
     }
+
+    /* Terminal de depuración plegable */
+    #ble-console {
+      max-height: 110px;
+      overflow-y: auto;
+      font-family: monospace;
+      font-size: 0.7rem;
+      background: rgba(0, 0, 0, 0.4);
+      padding: 0.5rem;
+      border-radius: 10px;
+      border: 1px solid var(--bg-card-border);
+      color: var(--text-sub);
+      line-height: 1.4;
+      display: none;
+      margin-top: 0.6rem;
+    }
   </style>
 </head>
 <body>
@@ -484,242 +575,355 @@
     </div>
   </header>
 
-  <!-- RELOJ AMBIENTAL PRINCIPAL -->
-  <div class="clock-hero">
-    <div id="disp-clock" class="clock-time">00:00:00</div>
-    <div id="disp-date" class="clock-date">Cargando fecha...</div>
-  </div>
-
-  <!-- TARJETA 1: CONTROL DE SESIÓN DE SUEÑO -->
-  <div class="card" id="card-session">
-    <!-- ESTADO REPOSO (Listo para acostarse) -->
-    <div id="box-idle">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem;">
-        <span style="font-weight:700; font-size:0.95rem;">🌙 Monitor de Sueño Inteligente</span>
-        <span style="font-size:0.72rem; color:var(--accent-cyan); font-weight:600;">v1.0 • Anti-Hibernación</span>
-      </div>
-      <p style="font-size:0.8rem; color:var(--text-sub); line-height:1.45; margin-bottom:1rem;">
-        Al acostarte, pulsa el botón. La app programará el MCU del anillo, mantendrá activo el enlace BLE y disparará mediciones de pulso periódicas para capturar tu hipnograma completo sin que entre en suspensión.
-      </p>
-
-      <div style="margin-bottom:1rem;">
-        <label style="font-size:0.78rem; color:var(--text-sub); font-weight:600;">⏱️ Intervalo de Muestreo de Pulso Nocturno:</label>
-        <select id="sel-hr-interval" class="glass-select" onchange="onIntervalChange(this.value)">
-          <option value="5">Cada 5 minutos (Alta resolución • Precisión máxima)</option>
-          <option value="10" selected>Cada 10 minutos (Recomendado • Equilibrio perfecto)</option>
-          <option value="15">Cada 15 minutos (Económico • Mínimo consumo)</option>
-        </select>
-      </div>
-
-      <button id="btn-start-sleep" class="btn-main btn-sleep-start" onclick="startSleepSession()">
-        <span>🛌</span> <span>Iniciar Sesión (Me voy a dormir)</span>
-      </button>
+  <!-- PESTAÑA 1: MONITOR (Control de activación, Hipnograma e Informe) -->
+  <main id="tab-monitor" class="tab-content active">
+    <!-- Reloj ambiental de cabecera -->
+    <div class="clock-hero">
+      <div id="disp-clock" class="clock-time">00:00:00</div>
+      <div id="disp-date" class="clock-date">Cargando fecha...</div>
     </div>
 
-    <!-- ESTADO ACTIVO (Durmiendo en curso) -->
-    <div id="box-active" style="display:none;">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.8rem;">
-        <div style="display:flex; align-items:center; gap:0.4rem;">
-          <span style="font-size:1.1rem;">🌙</span>
-          <span style="font-weight:700; font-size:0.95rem;">Monitor Nocturno Activo</span>
+    <!-- TARJETA DE CONTROL DE ACTIVACIÓN -->
+    <div class="card" id="card-session">
+      <!-- ESTADO REPOSO (Listo para acostarse) -->
+      <div id="box-idle">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+          <span style="font-weight:700; font-size:1rem;">🌙 Monitor de Sueño Inteligente</span>
+          <span style="font-size:0.75rem; color:var(--accent-cyan); font-weight:600;" id="lbl-sampling-interval-summary">Muestreo: cada 10 min</span>
         </div>
-        <span style="font-size:0.72rem; padding:0.25rem 0.6rem; border-radius:999px; background:rgba(139,92,246,0.2); color:#c084fc; border:1px solid rgba(139,92,246,0.4); font-weight:700;">
-          ● EN CURSO
-        </span>
-      </div>
 
-      <!-- Métricas en vivo del descanso -->
-      <div style="background:rgba(0,0,0,0.3); border-radius:14px; padding:1rem; margin-bottom:1rem; border:1px solid var(--bg-card-border);">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
-          <span style="font-size:0.82rem; color:var(--text-sub);">Tiempo de descanso:</span>
-          <span id="active-elapsed" style="font-size:1.6rem; font-weight:900; color:var(--accent-sleep);">0h 00m</span>
-        </div>
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.4rem;">
-          <span style="font-size:0.78rem; color:var(--text-sub);">Hora de acostarse:</span>
-          <span id="active-start-time" style="font-size:0.82rem; font-weight:600; color:#fff;">--:--</span>
-        </div>
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.4rem;">
-          <span style="font-size:0.78rem; color:var(--text-sub);">Último pulso registrado:</span>
-          <span id="active-live-hr" style="font-size:0.85rem; font-weight:700; color:var(--accent-cyan);">-- lpm</span>
-        </div>
-        <div style="display:flex; justify-content:space-between; align-items:center;">
-          <span style="font-size:0.78rem; color:var(--text-sub);">Fase estimada:</span>
-          <span id="active-live-stage" style="font-size:0.82rem; font-weight:600; color:#4ade80;">Calibrando constantes...</span>
-        </div>
-      </div>
-
-      <div style="display:flex; gap:0.5rem; margin-bottom:0.8rem;">
-        <button class="btn-secondary" style="flex:1; justify-content:center;" onclick="enterAmbientMode()">
-          <span>🖤</span> <span>Modo Pantalla OLED (Ultra-bajo consumo)</span>
+        <button id="btn-start-sleep" class="btn-main btn-sleep-start" onclick="startSleepSession()">
+          <span>🛌</span> <span>Iniciar Sesión (Me voy a dormir)</span>
         </button>
       </div>
 
-      <button id="btn-stop-sleep" class="btn-main btn-sleep-stop" onclick="stopSleepSession()">
-        <span>☀️</span> <span>Despertar y Generar Informe</span>
+      <!-- ESTADO ACTIVO (Durmiendo en curso) -->
+      <div id="box-active" style="display:none;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.8rem;">
+          <div style="display:flex; align-items:center; gap:0.4rem;">
+            <span style="font-size:1.1rem;">🌙</span>
+            <span style="font-weight:700; font-size:0.95rem;">Monitor Nocturno Activo</span>
+          </div>
+          <span style="font-size:0.72rem; padding:0.25rem 0.6rem; border-radius:999px; background:rgba(139,92,246,0.2); color:#c084fc; border:1px solid rgba(139,92,246,0.4); font-weight:700;">
+            ● EN CURSO
+          </span>
+        </div>
+
+        <!-- Métricas en vivo del descanso -->
+        <div style="background:rgba(0,0,0,0.3); border-radius:14px; padding:1rem; margin-bottom:1rem; border:1px solid var(--bg-card-border);">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
+            <span style="font-size:0.82rem; color:var(--text-sub);">Tiempo de descanso:</span>
+            <span id="active-elapsed" style="font-size:1.6rem; font-weight:900; color:var(--accent-sleep);">0h 00m</span>
+          </div>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.4rem;">
+            <span style="font-size:0.78rem; color:var(--text-sub);">Hora de acostarse:</span>
+            <span id="active-start-time" style="font-size:0.82rem; font-weight:600; color:var(--text-main);">--:--</span>
+          </div>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.4rem;">
+            <span style="font-size:0.78rem; color:var(--text-sub);">Último pulso registrado:</span>
+            <span id="active-live-hr" style="font-size:0.85rem; font-weight:700; color:var(--accent-cyan);">-- lpm</span>
+          </div>
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span style="font-size:0.78rem; color:var(--text-sub);">Fase estimada:</span>
+            <span id="active-live-stage" style="font-size:0.82rem; font-weight:600; color:#4ade80;">Calibrando constantes...</span>
+          </div>
+        </div>
+
+        <div style="display:flex; gap:0.5rem; margin-bottom:0.8rem;">
+          <button class="btn-secondary" style="flex:1; justify-content:center;" onclick="enterAmbientMode()">
+            <span>🖤</span> <span>Modo Pantalla OLED (Mesita de noche)</span>
+          </button>
+        </div>
+
+        <button id="btn-stop-sleep" class="btn-main btn-sleep-stop" onclick="stopSleepSession()">
+          <span>☀️</span> <span>Despertar y Generar Informe</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- TARJETA DE HIPNOGRAMA Y PULSO NOCTURNO -->
+    <div class="card" id="card-chart">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.3rem;">
+        <span style="font-weight:700; font-size:0.9rem;">📊 Hipnograma y Pulso Nocturno</span>
+        <span id="txt-chart-points" style="font-size:0.72rem; color:var(--text-muted);">0 registros</span>
+      </div>
+      
+      <div class="chart-container">
+        <svg id="svg-hypnogram" width="100%" height="100%" viewBox="0 0 360 120" preserveAspectRatio="none">
+          <line x1="0" y1="30" x2="360" y2="30" stroke="rgba(255,255,255,0.06)" stroke-dasharray="3,3" />
+          <line x1="0" y1="60" x2="360" y2="60" stroke="rgba(255,255,255,0.06)" stroke-dasharray="3,3" />
+          <line x1="0" y1="90" x2="360" y2="90" stroke="rgba(255,255,255,0.06)" stroke-dasharray="3,3" />
+          <path id="hypno-path" d="" fill="none" stroke="var(--accent-sleep)" stroke-width="2.5" />
+          <text x="10" y="24" fill="#64748b" font-size="9">>75 Despierto</text>
+          <text x="10" y="54" fill="#64748b" font-size="9">65-75 REM</text>
+          <text x="10" y="84" fill="#64748b" font-size="9">55-65 Ligero</text>
+          <text x="10" y="114" fill="#64748b" font-size="9"><55 Profundo</text>
+        </svg>
+      </div>
+    </div>
+
+    <!-- TARJETA DE INFORME DE SUEÑO (Última sesión) -->
+    <div class="card" id="card-report" style="display:none;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.8rem;">
+        <div>
+          <div style="font-weight:700; font-size:1rem;">🏆 Informe de Sueño</div>
+          <div id="rep-date-lbl" style="font-size:0.75rem; color:var(--text-sub);">Anoche</div>
+        </div>
+        <div style="text-align:right;">
+          <div id="rep-score" style="font-size:1.6rem; font-weight:900; color:var(--accent-cyan);">--</div>
+          <div style="font-size:0.65rem; color:var(--text-muted); font-weight:600;">PUNTUACIÓN / 100</div>
+        </div>
+      </div>
+
+      <div style="display:flex; justify-content:space-between; margin-bottom:0.8rem; background:rgba(0,0,0,0.25); padding:0.65rem 0.9rem; border-radius:12px;">
+        <div>
+          <span style="font-size:0.72rem; color:var(--text-sub);">Tiempo Total:</span>
+          <div id="rep-total-time" style="font-size:1.15rem; font-weight:800; color:var(--text-main);">--h --m</div>
+        </div>
+        <div style="text-align:right;">
+          <span style="font-size:0.72rem; color:var(--text-sub);">Horario:</span>
+          <div id="rep-range-time" style="font-size:0.95rem; font-weight:600; color:var(--text-main);">--:-- - --:--</div>
+        </div>
+      </div>
+
+      <div class="stages-bar">
+        <div id="bar-deep" class="stage-seg stage-deep" style="flex:25;"></div>
+        <div id="bar-rem" class="stage-seg stage-rem" style="flex:20;"></div>
+        <div id="bar-light" class="stage-seg stage-light" style="flex:48;"></div>
+        <div id="bar-awake" class="stage-seg stage-awake" style="flex:7;"></div>
+      </div>
+
+      <div class="stage-legend">
+        <div class="legend-item"><div class="legend-dot stage-deep"></div><span>Profundo: <strong id="lbl-deep" style="color:var(--text-main);">--m</strong></span></div>
+        <div class="legend-item"><div class="legend-dot stage-rem"></div><span>REM: <strong id="lbl-rem" style="color:var(--text-main);">--m</strong></span></div>
+        <div class="legend-item"><div class="legend-dot stage-light"></div><span>Ligero: <strong id="lbl-light" style="color:var(--text-main);">--m</strong></span></div>
+        <div class="legend-item"><div class="legend-dot stage-awake"></div><span>Despierto: <strong id="lbl-awake" style="color:var(--text-main);">--m</strong></span></div>
+      </div>
+
+      <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:0.5rem; margin-top:1rem; border-top:1px solid var(--bg-card-border); padding-top:0.8rem;">
+        <div style="text-align:center;">
+          <div style="font-size:0.68rem; color:var(--text-sub);">Pulso Mínimo</div>
+          <div id="rep-hr-min" style="font-size:1rem; font-weight:800; color:var(--accent-cyan);">-- lpm</div>
+        </div>
+        <div style="text-align:center;">
+          <div style="font-size:0.68rem; color:var(--text-sub);">Pulso Medio</div>
+          <div id="rep-hr-avg" style="font-size:1rem; font-weight:800; color:var(--text-main);">-- lpm</div>
+        </div>
+        <div style="text-align:center;">
+          <div style="font-size:0.68rem; color:var(--text-sub);">Caída Nocturna</div>
+          <div id="rep-hr-dip" style="font-size:1rem; font-weight:800; color:#10b981;">--%</div>
+        </div>
+      </div>
+
+      <p id="rep-diagnosis" style="font-size:0.78rem; color:var(--text-sub); line-height:1.45; margin-top:0.8rem; background:rgba(255,255,255,0.03); padding:0.6rem; border-radius:10px;">
+        Cargando dictamen de descanso...
+      </p>
+    </div>
+  </main>
+
+  <!-- PESTAÑA 2: HISTÓRICO (Calendario con registros, visor de hipnograma e informe) -->
+  <main id="tab-history" class="tab-content">
+    <div class="card" id="card-calendar">
+      <div class="cal-header">
+        <div class="cal-title">
+          <span>🗓️</span> <span id="cal-month-year">Octubre 2026</span>
+        </div>
+        <div style="display:flex; gap:0.4rem;">
+          <button class="cal-nav-btn" onclick="prevMonth()">◀</button>
+          <button class="cal-nav-btn" onclick="nextMonth()">▶</button>
+        </div>
+      </div>
+
+      <div class="cal-weekdays">
+        <span>L</span><span>M</span><span>X</span><span>J</span><span>V</span><span>S</span><span>D</span>
+      </div>
+
+      <div class="cal-grid" id="cal-grid-body">
+        <!-- Días generados dinámicamente -->
+      </div>
+
+      <!-- Resumen mensual -->
+      <div id="cal-month-summary" style="margin-top:0.8rem; padding:0.6rem; background:rgba(0,0,0,0.25); border-radius:10px; display:flex; justify-content:space-around; text-align:center; font-size:0.75rem;">
+        <div>
+          <span style="color:var(--text-muted);">Noches:</span>
+          <strong id="cal-sum-nights" style="color:var(--text-main); display:block;">0</strong>
+        </div>
+        <div>
+          <span style="color:var(--text-muted);">Media Calidad:</span>
+          <strong id="cal-sum-avg-score" style="color:var(--accent-cyan); display:block;">--</strong>
+        </div>
+        <div>
+          <span style="color:var(--text-muted);">Media Horas:</span>
+          <strong id="cal-sum-avg-hours" style="color:var(--text-main); display:block;">--</strong>
+        </div>
+      </div>
+    </div>
+
+    <!-- Visor de la noche seleccionada en el calendario -->
+    <div class="card" id="card-history-detail" style="display:none;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.7rem;">
+        <div>
+          <div style="font-weight:700; font-size:0.95rem;">🔍 Detalle de la Noche</div>
+          <div id="hist-detail-date" style="font-size:0.75rem; color:var(--text-sub);">--</div>
+        </div>
+        <div id="hist-detail-score" style="font-size:1.5rem; font-weight:900; color:var(--accent-cyan);">--</div>
+      </div>
+
+      <div style="display:flex; justify-content:space-between; margin-bottom:0.6rem; font-size:0.82rem;">
+        <span style="color:var(--text-sub);">Horario: <strong id="hist-detail-range" style="color:var(--text-main);">--</strong></span>
+        <span style="color:var(--text-sub);">Total: <strong id="hist-detail-total" style="color:var(--text-main);">--</strong></span>
+      </div>
+
+      <div class="stages-bar" style="margin:0.5rem 0;">
+        <div id="hist-bar-deep" class="stage-seg stage-deep" style="flex:25;"></div>
+        <div id="hist-bar-rem" class="stage-seg stage-rem" style="flex:20;"></div>
+        <div id="hist-bar-light" class="stage-seg stage-light" style="flex:48;"></div>
+        <div id="hist-bar-awake" class="stage-seg stage-awake" style="flex:7;"></div>
+      </div>
+
+      <div class="stage-legend" style="margin-bottom:0.7rem;">
+        <div class="legend-item"><div class="legend-dot stage-deep"></div><span>Profundo: <strong id="hist-lbl-deep" style="color:var(--text-main);">--</strong></span></div>
+        <div class="legend-item"><div class="legend-dot stage-rem"></div><span>REM: <strong id="hist-lbl-rem" style="color:var(--text-main);">--</strong></span></div>
+        <div class="legend-item"><div class="legend-dot stage-light"></div><span>Ligero: <strong id="hist-lbl-light" style="color:var(--text-main);">--</strong></span></div>
+        <div class="legend-item"><div class="legend-dot stage-awake"></div><span>Despierto: <strong id="hist-lbl-awake" style="color:var(--text-main);">--</strong></span></div>
+      </div>
+
+      <!-- Gráfica de pulso de esa noche -->
+      <div class="chart-container" style="height:100px;">
+        <svg id="svg-hist-hypnogram" width="100%" height="100%" viewBox="0 0 360 120" preserveAspectRatio="none">
+          <line x1="0" y1="30" x2="360" y2="30" stroke="rgba(255,255,255,0.06)" stroke-dasharray="3,3" />
+          <line x1="0" y1="60" x2="360" y2="60" stroke="rgba(255,255,255,0.06)" stroke-dasharray="3,3" />
+          <line x1="0" y1="90" x2="360" y2="90" stroke="rgba(255,255,255,0.06)" stroke-dasharray="3,3" />
+          <path id="hist-hypno-path" d="" fill="none" stroke="var(--accent-sleep)" stroke-width="2.5" />
+        </svg>
+      </div>
+
+      <p id="hist-detail-diag" style="font-size:0.75rem; color:var(--text-sub); line-height:1.45; background:rgba(255,255,255,0.03); padding:0.6rem; border-radius:10px;">
+        --
+      </p>
+    </div>
+
+    <!-- Lista de todas las noches registradas -->
+    <div class="card">
+      <div style="font-weight:700; font-size:0.9rem; margin-bottom:0.6rem;">📋 Registro Cronológico</div>
+      <div id="history-list" style="display:flex; flex-direction:column; gap:0.5rem;">
+        <div style="font-size:0.78rem; color:var(--text-muted); text-align:center; padding:1rem;">
+          No hay registros guardados aún.
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- PESTAÑA 3: AJUSTES (Configuración de pulso, BLE, Tema y Utilidades) -->
+  <main id="tab-settings" class="tab-content">
+    <!-- Configuración de intervalo de pulso -->
+    <div class="card">
+      <div style="font-weight:700; font-size:0.95rem; margin-bottom:0.3rem;">⏱️ Tiempo de Medición de FC en Sesión</div>
+      <div style="font-size:0.75rem; color:var(--text-sub); margin-bottom:0.6rem;">
+        Frecuencia con la que la app solicita mediciones de pulso al anillo durante la noche para mantener despierto el enlace y trazar el hipnograma.
+      </div>
+      <select id="sel-hr-interval" class="glass-select" onchange="onIntervalChange(this.value)">
+        <option value="5">Cada 5 minutos (Alta resolución • Precisión máxima)</option>
+        <option value="10" selected>Cada 10 minutos (Recomendado • Equilibrio perfecto)</option>
+        <option value="15">Cada 15 minutos (Económico • Mínimo consumo)</option>
+      </select>
+    </div>
+
+    <!-- Vinculación y Conexión BLE -->
+    <div class="card">
+      <div style="font-weight:700; font-size:0.95rem; margin-bottom:0.3rem;">💍 Dispositivo y Vinculación</div>
+      <div style="font-size:0.75rem; color:var(--text-sub); margin-bottom:0.8rem;">
+        Estado actual del enlace con el anillo inteligente R99 (YCBT).
+      </div>
+      
+      <div style="background:rgba(0,0,0,0.25); border-radius:12px; padding:0.8rem; margin-bottom:0.8rem; border:1px solid var(--bg-card-border);">
+        <div style="display:flex; justify-content:space-between; margin-bottom:0.4rem; font-size:0.82rem;">
+          <span style="color:var(--text-sub);">Anillo vinculado:</span>
+          <strong id="settings-device-id" style="color:var(--text-main); font-family:monospace; font-size:0.78rem;">Ninguno</strong>
+        </div>
+        <div style="display:flex; justify-content:space-between; font-size:0.82rem;">
+          <span style="color:var(--text-sub);">Estado conexión:</span>
+          <strong id="settings-conn-state" style="color:#ef4444;">Desconectado</strong>
+        </div>
+      </div>
+
+      <div style="display:flex; flex-direction:column; gap:0.5rem;">
+        <button class="btn-secondary" style="justify-content:center;" onclick="scanAndConnectBLE()">
+          <span>🔍</span> <span>Buscar y Conectar Anillo R99</span>
+        </button>
+        <button class="btn-secondary" style="justify-content:center;" onclick="forceReconnectBle()">
+          <span>🔄</span> <span>Reconectar Ahora</span>
+        </button>
+        <button class="btn-secondary btn-danger" style="justify-content:center;" onclick="unpairRing()">
+          <span>❌</span> <span>Desvincular Anillo</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Tema Visual y Apariencia -->
+    <div class="card">
+      <div style="font-weight:700; font-size:0.95rem; margin-bottom:0.3rem;">🌓 Apariencia y Tema</div>
+      <div style="font-size:0.75rem; color:var(--text-sub); margin-bottom:0.6rem;">
+        Selecciona tu preferencia de contraste visual.
+      </div>
+      <select id="sel-theme" class="glass-select" onchange="setThemeMode(this.value)">
+        <option value="dark" selected>Modo Oscuro OLED (Recomendado para la noche)</option>
+        <option value="light">Modo Claro</option>
+      </select>
+    </div>
+
+    <!-- Pantalla Ambiente Nocturna -->
+    <div class="card">
+      <div style="font-weight:700; font-size:0.95rem; margin-bottom:0.3rem;">🖤 Pantalla Ambiente OLED</div>
+      <div style="font-size:0.75rem; color:var(--text-sub); margin-bottom:0.7rem;">
+        Modo de ultra-bajo consumo con pantalla en negro absoluto y reloj atenuado para dejar el móvil en la mesita de noche.
+      </div>
+      <button class="btn-secondary" style="width:100%; justify-content:center;" onclick="enterAmbientMode()">
+        <span>🌙</span> <span>Activar Modo Pantalla Ambiente</span>
       </button>
     </div>
-  </div>
 
-  <!-- TARJETA 2: HIPNOGRAMA Y CURVA DE PULSO NOCTURNO -->
-  <div class="card" id="card-chart">
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.3rem;">
-      <span style="font-weight:700; font-size:0.9rem;">📊 Hipnograma y Pulso Nocturno</span>
-      <span id="txt-chart-points" style="font-size:0.72rem; color:var(--text-muted);">0 registros</span>
-    </div>
-    <div style="font-size:0.75rem; color:var(--text-sub); margin-bottom:0.5rem;">
-      Evolución minuto a minuto del ritmo cardíaco y correlación con las fases del sueño.
-    </div>
-    
-    <div class="chart-container">
-      <svg id="svg-hypnogram" width="100%" height="100%" viewBox="0 0 360 120" preserveAspectRatio="none">
-        <line x1="0" y1="30" x2="360" y2="30" stroke="rgba(255,255,255,0.06)" stroke-dasharray="3,3" />
-        <line x1="0" y1="60" x2="360" y2="60" stroke="rgba(255,255,255,0.06)" stroke-dasharray="3,3" />
-        <line x1="0" y1="90" x2="360" y2="90" stroke="rgba(255,255,255,0.06)" stroke-dasharray="3,3" />
-        <path id="hypno-path" d="" fill="none" stroke="var(--accent-sleep)" stroke-width="2.5" />
-        <text x="10" y="24" fill="#64748b" font-size="9">>75 Despierto</text>
-        <text x="10" y="54" fill="#64748b" font-size="9">65-75 REM</text>
-        <text x="10" y="84" fill="#64748b" font-size="9">55-65 Ligero</text>
-        <text x="10" y="114" fill="#64748b" font-size="9"><55 Profundo</text>
-      </svg>
-    </div>
-  </div>
-
-  <!-- TARJETA 3: INFORME DE LA MAÑANA (Última noche registrada) -->
-  <div class="card" id="card-report" style="display:none;">
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.8rem;">
-      <div>
-        <div style="font-weight:700; font-size:1rem;">🏆 Informe de Sueño</div>
-        <div id="rep-date-lbl" style="font-size:0.75rem; color:var(--text-sub);">Anoche</div>
+    <!-- Persistencia y Depuración BLE -->
+    <div class="card">
+      <div style="font-weight:700; font-size:0.95rem; margin-bottom:0.3rem;">🛡️ Persistencia y Sistema</div>
+      <div style="font-size:0.75rem; color:var(--text-sub); margin-bottom:0.7rem; line-height:1.4;">
+        ✓ Respaldo automático activo (IndexedDB + Android Storage Preservation). Tus datos se guardan tras cada sesión y se restauran automáticamente al instalar la aplicación.
       </div>
-      <div style="text-align:right;">
-        <div id="rep-score" style="font-size:1.6rem; font-weight:900; color:var(--accent-cyan);">--</div>
-        <div style="font-size:0.65rem; color:var(--text-muted); font-weight:600;">PUNTUACIÓN / 100</div>
+      <div style="display:flex; gap:0.5rem;">
+        <button class="btn-secondary" style="flex:1; justify-content:center;" onclick="toggleBleConsole()">
+          <span>🔧</span> <span>Ver Log BLE</span>
+        </button>
+        <button class="btn-secondary btn-danger" style="flex:1; justify-content:center;" onclick="clearAllData()">
+          <span>🗑️</span> <span>Borrar Datos</span>
+        </button>
       </div>
+      <div id="ble-console"></div>
     </div>
+  </main>
 
-    <!-- Duración y rango -->
-    <div style="display:flex; justify-content:space-between; margin-bottom:0.8rem; background:rgba(0,0,0,0.25); padding:0.65rem 0.9rem; border-radius:12px;">
-      <div>
-        <span style="font-size:0.72rem; color:var(--text-sub);">Tiempo Total:</span>
-        <div id="rep-total-time" style="font-size:1.15rem; font-weight:800; color:#fff;">--h --m</div>
-      </div>
-      <div style="text-align:right;">
-        <span style="font-size:0.72rem; color:var(--text-sub);">Horario:</span>
-        <div id="rep-range-time" style="font-size:0.95rem; font-weight:600; color:#fff;">--:-- - --:--</div>
-      </div>
+  <!-- BARRA DE NAVEGACIÓN INFERIOR (3 PESTAÑAS) -->
+  <nav class="bottom-nav">
+    <div class="nav-item active" id="nav-monitor" onclick="switchTab('monitor')">
+      <div class="nav-icon">🌙</div>
+      <div class="nav-label">Monitor</div>
     </div>
-
-    <!-- Barra de fases -->
-    <div class="stages-bar">
-      <div id="bar-deep" class="stage-seg stage-deep" style="flex:25;"></div>
-      <div id="bar-rem" class="stage-seg stage-rem" style="flex:20;"></div>
-      <div id="bar-light" class="stage-seg stage-light" style="flex:48;"></div>
-      <div id="bar-awake" class="stage-seg stage-awake" style="flex:7;"></div>
+    <div class="nav-item" id="nav-history" onclick="switchTab('history')">
+      <div class="nav-icon">🗓️</div>
+      <div class="nav-label">Histórico</div>
     </div>
-
-    <div class="stage-legend">
-      <div class="legend-item"><div class="legend-dot stage-deep"></div><span>Profundo: <strong id="lbl-deep" style="color:#fff;">--m</strong></span></div>
-      <div class="legend-item"><div class="legend-dot stage-rem"></div><span>REM: <strong id="lbl-rem" style="color:#fff;">--m</strong></span></div>
-      <div class="legend-item"><div class="legend-dot stage-light"></div><span>Ligero: <strong id="lbl-light" style="color:#fff;">--m</strong></span></div>
-      <div class="legend-item"><div class="legend-dot stage-awake"></div><span>Despierto: <strong id="lbl-awake" style="color:#fff;">--m</strong></span></div>
+    <div class="nav-item" id="nav-settings" onclick="switchTab('settings')">
+      <div class="nav-icon">⚙️</div>
+      <div class="nav-label">Ajustes</div>
     </div>
+  </nav>
 
-    <!-- Constantes cardiovasculares del sueño -->
-    <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:0.5rem; margin-top:1rem; border-top:1px solid var(--bg-card-border); padding-top:0.8rem;">
-      <div style="text-align:center;">
-        <div style="font-size:0.68rem; color:var(--text-sub);">Pulso Mínimo</div>
-        <div id="rep-hr-min" style="font-size:1rem; font-weight:800; color:var(--accent-cyan);">-- lpm</div>
-      </div>
-      <div style="text-align:center;">
-        <div style="font-size:0.68rem; color:var(--text-sub);">Pulso Medio</div>
-        <div id="rep-hr-avg" style="font-size:1rem; font-weight:800; color:#fff;">-- lpm</div>
-      </div>
-      <div style="text-align:center;">
-        <div style="font-size:0.68rem; color:var(--text-sub);">Caída Nocturna</div>
-        <div id="rep-hr-dip" style="font-size:1rem; font-weight:800; color:#10b981;">--%</div>
-      </div>
-    </div>
-
-    <p id="rep-diagnosis" style="font-size:0.78rem; color:var(--text-sub); line-height:1.45; margin-top:0.8rem; background:rgba(255,255,255,0.03); padding:0.6rem; border-radius:10px;">
-      Cargando dictamen de descanso...
-    </p>
-  </div>
-
-  <!-- TARJETA 4: CALENDARIO DE CALIDAD DE SUEÑO -->
-  <div class="card" id="card-calendar">
-    <div class="cal-header">
-      <div class="cal-title">
-        <span>🗓️</span> <span id="cal-month-year">Octubre 2026</span>
-      </div>
-      <div style="display:flex; gap:0.4rem;">
-        <button class="cal-nav-btn" onclick="prevMonth()">◀</button>
-        <button class="cal-nav-btn" onclick="nextMonth()">▶</button>
-      </div>
-    </div>
-
-    <div class="cal-weekdays">
-      <span>L</span><span>M</span><span>X</span><span>J</span><span>V</span><span>S</span><span>D</span>
-    </div>
-
-    <div class="cal-grid" id="cal-grid-body">
-      <!-- Días generados dinámicamente -->
-    </div>
-
-    <!-- Resumen mensual -->
-    <div id="cal-month-summary" style="margin-top:0.8rem; padding:0.6rem; background:rgba(0,0,0,0.25); border-radius:10px; display:flex; justify-content:space-around; text-align:center; font-size:0.75rem;">
-      <div>
-        <span style="color:var(--text-muted);">Noches:</span>
-        <strong id="cal-sum-nights" style="color:#fff; display:block;">0</strong>
-      </div>
-      <div>
-        <span style="color:var(--text-muted);">Media Calidad:</span>
-        <strong id="cal-sum-avg-score" style="color:var(--accent-cyan); display:block;">--</strong>
-      </div>
-      <div>
-        <span style="color:var(--text-muted);">Media Horas:</span>
-        <strong id="cal-sum-avg-hours" style="color:#fff; display:block;">--</strong>
-      </div>
-    </div>
-  </div>
-
-  <!-- TARJETA 5: COPIA DE SEGURIDAD Y PERSISTENCIA (ANTI-DESINSTALACIÓN) -->
-  <div class="card">
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
-      <span style="font-weight:700; font-size:0.9rem;">💾 Copia de Seguridad y Persistencia</span>
-      <span style="font-size:0.7rem; color:var(--accent-green); font-weight:600;">IndexedDB + Local</span>
-    </div>
-    <p style="font-size:0.75rem; color:var(--text-sub); line-height:1.45; margin-bottom:0.8rem;">
-      Tus datos se guardan en el almacenamiento local seguro y en el sistema de copia de seguridad de Android. Si vas a reinstalar la app o cambiar de teléfono, puedes descargar un archivo JSON con todo tu historial o restaurarlo con un solo clic.
-    </p>
-    <div style="display:flex; gap:0.5rem;">
-      <button class="btn-secondary" style="flex:1; justify-content:center;" onclick="exportBackupData()">
-        <span>📤</span> <span>Descargar Copia (JSON)</span>
-      </button>
-      <button class="btn-secondary" style="flex:1; justify-content:center;" onclick="document.getElementById('input-restore-file').click()">
-        <span>📥</span> <span>Restaurar Copia</span>
-      </button>
-      <input type="file" id="input-restore-file" accept=".json" style="display:none;" onchange="importBackupData(event)">
-    </div>
-  </div>
-
-  <!-- OPCIONES & DIAGNÓSTICO -->
-  <div style="display:flex; justify-content:space-between; align-items:center; padding:0 0.5rem 1rem;">
-    <button class="btn-secondary" onclick="toggleBleConsole()">
-      <span>🔧</span> <span>Registro BLE</span>
-    </button>
-    <button class="btn-secondary" onclick="scanAndConnectBLE()">
-      <span>🔄</span> <span>Buscar Anillo</span>
-    </button>
-  </div>
-  <div id="ble-console"></div>
-
-  <!-- PANTALLA AMBIENTE OLED (Activada por el usuario para la mesita de noche) -->
+  <!-- PANTALLA AMBIENTE OLED -->
   <div id="ambient-screen" onclick="exitAmbientMode()">
     <div style="font-size:0.9rem; color:rgba(255,255,255,0.25); margin-bottom:0.5rem;">🌙 SineRing Sleep • Modo Ambiente</div>
     <div id="ambient-clock" class="ambient-clock">00:00</div>
     <div id="ambient-hr" class="ambient-pulse">♥ -- lpm</div>
     <div style="font-size:0.75rem; color:rgba(255,255,255,0.2); margin-bottom:1.5rem;">
-      Pantalla OLED pura (0% brillo parásito). Pulsa para volver.
+      Pantalla OLED pura (0% brillo parásito). Toca en cualquier lugar para salir.
     </div>
     <button class="btn-exit-ambient">Salir de Pantalla Ambiente</button>
   </div>
