@@ -565,52 +565,266 @@ function displayMorningReport(rep) {
   renderHypnogramChart(rep.points || []);
 }
 
-function saveReportToHistory(report) {
-  try {
-    const hist = JSON.parse(localStorage.getItem('sinering_sleep_history') || '[]');
-    // Evitar duplicados de la misma noche
-    const filtered = hist.filter(h => h.date !== report.date);
-    filtered.unshift(report);
-    if (filtered.length > 15) filtered.pop();
-    localStorage.setItem('sinering_sleep_history', JSON.stringify(filtered));
-    renderHistoryList();
-  } catch(e) {}
+// -------------------------------------------------------------
+// 5.b DUAL-STORAGE (LOCALSTORAGE + INDEXEDDB) & COPIA DE SEGURIDAD
+// -------------------------------------------------------------
+let db = null;
+
+function initIndexedDb() {
+  return new Promise((resolve) => {
+    if (!window.indexedDB) return resolve(null);
+    const req = window.indexedDB.open("SineRingSleepDB", 1);
+    req.onupgradeneeded = (e) => {
+      const d = e.target.result;
+      if (!d.objectStoreNames.contains("sleep_sessions")) {
+        d.createObjectStore("sleep_sessions", { keyPath: "date" });
+      }
+    };
+    req.onsuccess = (e) => {
+      db = e.target.result;
+      syncIndexedDbToLocalStorage().then(resolve);
+    };
+    req.onerror = () => resolve(null);
+  });
 }
 
-function renderHistoryList() {
-  const container = document.getElementById('history-list');
-  const countEl = document.getElementById('txt-hist-count');
-  if (!container) return;
+function syncIndexedDbToLocalStorage() {
+  return new Promise((resolve) => {
+    if (!db) return resolve();
+    const tx = db.transaction("sleep_sessions", "readonly");
+    const store = tx.objectStore("sleep_sessions");
+    const req = store.getAll();
+    req.onsuccess = () => {
+      const dbSessions = req.result || [];
+      if (dbSessions.length > 0) {
+        let localHist = [];
+        try {
+          localHist = JSON.parse(localStorage.getItem('sinering_sleep_history') || '[]');
+        } catch(e) {}
+        
+        // Si localStorage estaba vacío (reinstalación o limpieza de caché), restauramos desde IndexedDB
+        if (localHist.length === 0) {
+          console.log("[Storage] Restaurando historial desde IndexedDB tras reinstalación...");
+          localHist = dbSessions.sort((a, b) => (b.date || "").localeCompare(a.date || ""));
+          localStorage.setItem('sinering_sleep_history', JSON.stringify(localHist));
+        }
+      }
+      resolve();
+    };
+    req.onerror = () => resolve();
+  });
+}
 
+function saveReportToHistory(report) {
+  try {
+    // 1. Guardar en localStorage
+    let hist = JSON.parse(localStorage.getItem('sinering_sleep_history') || '[]');
+    hist = hist.filter(h => h.date !== report.date);
+    hist.unshift(report);
+    if (hist.length > 90) hist.pop(); // Hasta 90 noches
+    localStorage.setItem('sinering_sleep_history', JSON.stringify(hist));
+
+    // 2. Guardar en IndexedDB
+    if (db) {
+      const tx = db.transaction("sleep_sessions", "readwrite");
+      tx.objectStore("sleep_sessions").put(report);
+    }
+
+    renderCalendar();
+  } catch(e) {
+    console.error("[Storage] Error guardando sesión:", e);
+  }
+}
+
+// Exportar copia de seguridad (JSON)
+function exportBackupData() {
   try {
     const hist = JSON.parse(localStorage.getItem('sinering_sleep_history') || '[]');
-    if (countEl) countEl.textContent = `${hist.length} noches`;
-
     if (hist.length === 0) {
-      container.innerHTML = '<div style="font-size:0.78rem; color:var(--text-muted); text-align:center; padding:1rem;">No hay registros anteriores guardados aún.</div>';
+      alert("ℹ️ No hay registros de sueño para exportar aún.");
       return;
     }
 
-    container.innerHTML = '';
-    hist.forEach((h) => {
-      const hours = Math.floor(h.total_duration_minutes / 60);
-      const mins = h.total_duration_minutes % 60;
-      const item = document.createElement('div');
-      item.style.cssText = 'background:rgba(255,255,255,0.03); border:1px solid var(--bg-card-border); padding:0.7rem; border-radius:12px; display:flex; justify-content:space-between; align-items:center; cursor:pointer;';
-      item.innerHTML = `
-        <div>
-          <div style="font-weight:700; font-size:0.85rem; color:#fff;">${h.date} (${h.start_time} - ${h.end_time})</div>
-          <div style="font-size:0.75rem; color:var(--text-sub);">Total: ${hours}h ${mins}m • Profundo: ${h.deep_sleep_minutes}m</div>
-        </div>
-        <div style="text-align:right;">
-          <div style="font-size:1.1rem; font-weight:900; color:var(--accent-cyan);">${h.sleep_score}</div>
-          <div style="font-size:0.65rem; color:var(--text-muted);">PUNTUACIÓN</div>
-        </div>
-      `;
-      item.onclick = () => displayMorningReport(h);
-      container.appendChild(item);
-    });
+    const backupObj = {
+      app: "SineRing Sleep",
+      version: "1.0.0",
+      exportDate: new Date().toISOString(),
+      nightsCount: hist.length,
+      sessions: hist
+    };
+
+    const jsonStr = JSON.stringify(backupObj, null, 2);
+    const blob = new Blob([jsonStr], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const nowStr = new Date().toISOString().split('T')[0];
+
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `SineRing_Sleep_Backup_${nowStr}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    alert(`✓ Copia de seguridad descargada con éxito (${hist.length} noches registradas).\n\nGuarda este archivo en tu Google Drive o Documentos para conservarlo pase lo que pase con el teléfono.`);
+  } catch(e) {
+    alert("Error al exportar copia de seguridad: " + (e.message || e));
+  }
+}
+
+// Restaurar copia de seguridad (JSON)
+function importBackupData(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const data = JSON.parse(e.target.result);
+      const sessions = Array.isArray(data) ? data : data.sessions;
+      if (!sessions || !Array.isArray(sessions) || sessions.length === 0) {
+        alert("⚠️ El archivo seleccionado no contiene un formato de respaldo válido de SineRing Sleep.");
+        return;
+      }
+
+      let currentHist = JSON.parse(localStorage.getItem('sinering_sleep_history') || '[]');
+      const dateMap = new Map();
+      currentHist.forEach(s => dateMap.set(s.date, s));
+      sessions.forEach(s => dateMap.set(s.date, s)); // sobrescribe / añade
+
+      const merged = Array.from(dateMap.values()).sort((a, b) => (b.date || "").localeCompare(a.date || ""));
+      localStorage.setItem('sinering_sleep_history', JSON.stringify(merged));
+
+      if (db) {
+        const tx = db.transaction("sleep_sessions", "readwrite");
+        const store = tx.objectStore("sleep_sessions");
+        sessions.forEach(s => store.put(s));
+      }
+
+      renderCalendar();
+      if (merged.length > 0) displayMorningReport(merged[0]);
+      alert(`✓ ¡Restauración completada!\nSe han cargado ${sessions.length} noches de sueño al historial.`);
+    } catch(err) {
+      alert("Error procesando archivo de respaldo: " + (err.message || err));
+    }
+  };
+  reader.readAsText(file);
+  event.target.value = "";
+}
+
+// -------------------------------------------------------------
+// 5.c CALENDARIO DE CALIDAD DE SUEÑO
+// -------------------------------------------------------------
+let calDate = new Date();
+
+function prevMonth() {
+  calDate.setMonth(calDate.getMonth() - 1);
+  renderCalendar();
+}
+
+function nextMonth() {
+  calDate.setMonth(calDate.getMonth() + 1);
+  renderCalendar();
+}
+
+function renderCalendar() {
+  const monthYearEl = document.getElementById('cal-month-year');
+  const gridEl = document.getElementById('cal-grid-body');
+  if (!monthYearEl || !gridEl) return;
+
+  const year = calDate.getFullYear();
+  const month = calDate.getMonth(); // 0..11
+  const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+  monthYearEl.textContent = `${monthNames[month]} ${year}`;
+
+  gridEl.innerHTML = '';
+
+  // Noches guardadas
+  let hist = [];
+  try {
+    hist = JSON.parse(localStorage.getItem('sinering_sleep_history') || '[]');
   } catch(e) {}
+
+  const historyByDate = new Map();
+  hist.forEach(h => {
+    if (h.date) historyByDate.set(h.date, h);
+  });
+
+  // Primer día del mes (Lunes=0..Domingo=6)
+  const firstDayObj = new Date(year, month, 1);
+  const startDay = (firstDayObj.getDay() + 6) % 7;
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+  const todayStr = new Date().toISOString().split('T')[0];
+
+  // Celdas vacías del principio
+  for (let i = 0; i < startDay; i++) {
+    const emptyCell = document.createElement('div');
+    emptyCell.className = 'cal-day empty';
+    gridEl.appendChild(emptyCell);
+  }
+
+  let monthSessions = [];
+
+  // Días del mes
+  for (let d = 1; d <= daysInMonth; d++) {
+    const dStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+    const cell = document.createElement('div');
+    cell.className = 'cal-day';
+    if (dStr === todayStr) cell.classList.add('today');
+
+    const numSpan = document.createElement('span');
+    numSpan.className = 'cal-day-num';
+    numSpan.textContent = d;
+    cell.appendChild(numSpan);
+
+    const session = historyByDate.get(dStr);
+    if (session) {
+      monthSessions.push(session);
+      cell.classList.add('has-data');
+      const score = session.sleep_score || 80;
+      let badgeClass = 'score-good';
+      if (score >= 85) badgeClass = 'score-optimal';
+      else if (score < 70) badgeClass = 'score-fair';
+
+      const badge = document.createElement('div');
+      badge.className = `cal-score-badge ${badgeClass}`;
+      badge.textContent = score;
+      cell.appendChild(badge);
+
+      cell.onclick = () => {
+        document.querySelectorAll('.cal-day').forEach(el => el.classList.remove('selected'));
+        cell.classList.add('selected');
+        displayMorningReport(session);
+        document.getElementById('card-report')?.scrollIntoView({ behavior: 'smooth' });
+      };
+    }
+
+    gridEl.appendChild(cell);
+  }
+
+  // Resumen del mes
+  const sumNights = document.getElementById('cal-sum-nights');
+  const sumScore = document.getElementById('cal-sum-avg-score');
+  const sumHours = document.getElementById('cal-sum-avg-hours');
+
+  if (sumNights) sumNights.textContent = monthSessions.length;
+  if (sumScore) {
+    if (monthSessions.length > 0) {
+      const avg = Math.round(monthSessions.reduce((a, b) => a + (b.sleep_score || 80), 0) / monthSessions.length);
+      sumScore.textContent = `${avg} / 100`;
+    } else {
+      sumScore.textContent = '--';
+    }
+  }
+  if (sumHours) {
+    if (monthSessions.length > 0) {
+      const avgMin = Math.round(monthSessions.reduce((a, b) => a + (b.total_duration_minutes || 0), 0) / monthSessions.length);
+      sumHours.textContent = `${Math.floor(avgMin / 60)}h ${avgMin % 60}m`;
+    } else {
+      sumHours.textContent = '--';
+    }
+  }
 }
 
 function renderHypnogramChart(points) {
@@ -670,6 +884,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (ambClock) ambClock.textContent = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   }, 1000);
 
+  // Inicializar almacenamiento persistente dual (IndexedDB + localStorage)
+  await initIndexedDb();
+
   // Restaurar selector de intervalo guardado
   const selInt = document.getElementById('sel-hr-interval');
   if (selInt) selInt.value = sampleIntervalMinutes.toString();
@@ -692,8 +909,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   } catch(e) {}
 
-  // Cargar historial
-  renderHistoryList();
+  // Renderizar calendario
+  renderCalendar();
 
   // Mostrar último reporte guardado si existe
   try {
