@@ -24,10 +24,19 @@ def draw_sleep_ring_icon(size: int, is_round: bool = False, is_foreground: bool 
     img = Image.new("RGBA", (canvas_size, canvas_size), (0, 0, 0, 0))
     draw = ImageDraw.Draw(img)
 
-    center_x = canvas_size * 0.44
-    center_y = canvas_size * 0.54
-    r_outer = canvas_size * 0.30
-    r_inner = canvas_size * 0.22
+    # Para el foreground de adaptive icons de Android (canvas de 108dp con zona segura del 66%):
+    # aplicamos un factor de escala 0.76 centrado para evitar que la máscara circular/squircle corte las Z o el anillo
+    safe_scale = 0.76 if is_foreground else 1.0
+    c_shift_x = canvas_size * 0.5 * (1 - safe_scale)
+    c_shift_y = canvas_size * 0.5 * (1 - safe_scale)
+
+    def map_x(x): return c_shift_x + x * safe_scale
+    def map_y(y): return c_shift_y + y * safe_scale
+
+    center_x = map_x(canvas_size * 0.44)
+    center_y = map_y(canvas_size * 0.54)
+    r_outer = canvas_size * 0.30 * safe_scale
+    r_inner = canvas_size * 0.22 * safe_scale
 
     if not is_foreground:
         # Fondo oscuro noche profunda con estrellas tenues
@@ -37,27 +46,27 @@ def draw_sleep_ring_icon(size: int, is_round: bool = False, is_foreground: bool 
             radius = canvas_size * 0.23
             draw.rounded_rectangle([0, 0, canvas_size - 1, canvas_size - 1], radius=radius, fill=(7, 10, 24, 255))
 
-        # Aura lunar de fondo
-        for i in range(20):
-            alpha = max(0, int(35 - i * 1.7))
-            glow_r = canvas_size * 0.40 + i * scale * 2
-            draw.ellipse([center_x - glow_r, center_y - glow_r, center_x + glow_r, center_y + glow_r],
-                         outline=(56, 189, 248, alpha), width=int(2 * scale))
+    # Aura lunar de fondo
+    for i in range(20):
+        alpha = max(0, int(35 - i * 1.7))
+        glow_r = (canvas_size * 0.40 + i * scale * 2) * safe_scale
+        draw.ellipse([center_x - glow_r, center_y - glow_r, center_x + glow_r, center_y + glow_r],
+                     outline=(56, 189, 248, alpha), width=int(2 * scale * safe_scale))
 
-        # Luna creciente sutil en esquina superior izquierda
-        moon_x = canvas_size * 0.24
-        moon_y = canvas_size * 0.24
-        moon_r = canvas_size * 0.08
-        draw.ellipse([moon_x - moon_r, moon_y - moon_r, moon_x + moon_r, moon_y + moon_r], fill=(224, 231, 255, 230))
-        # Recorte de la luna
-        draw.ellipse([moon_x - moon_r * 0.5, moon_y - moon_r * 1.2, moon_x + moon_r * 1.5, moon_y + moon_r * 0.8], fill=(7, 10, 24, 255))
+    # Luna creciente sutil en esquina superior izquierda
+    moon_x = map_x(canvas_size * 0.24)
+    moon_y = map_y(canvas_size * 0.24)
+    moon_r = canvas_size * 0.08 * safe_scale
+    draw.ellipse([moon_x - moon_r, moon_y - moon_r, moon_x + moon_r, moon_y + moon_r], fill=(224, 231, 255, 230))
+    # Recorte de la luna
+    draw.ellipse([moon_x - moon_r * 0.5, moon_y - moon_r * 1.2, moon_x + moon_r * 1.5, moon_y + moon_r * 0.8], fill=(7, 10, 24, 255 if not is_foreground else 0))
 
     # Resplandor exterior del anillo
     for i in range(14):
         alpha = max(0, int(45 - i * 3.2))
-        draw.ellipse([center_x - r_outer - i*scale, center_y - r_outer - i*scale,
-                      center_x + r_outer + i*scale, center_y + r_outer + i*scale],
-                     outline=(129, 140, 248, alpha), width=int(2.5 * scale))
+        draw.ellipse([center_x - r_outer - i*scale*safe_scale, center_y - r_outer - i*scale*safe_scale,
+                      center_x + r_outer + i*scale*safe_scale, center_y + r_outer + i*scale*safe_scale],
+                     outline=(129, 140, 248, alpha), width=int(2.5 * scale * safe_scale))
 
     # Anillo principal (Cuerpo del Smart Ring)
     ring_width = int(r_outer - r_inner)
@@ -98,30 +107,30 @@ def draw_sleep_ring_icon(size: int, is_round: bool = False, is_foreground: bool 
         draw.line([(x, y + h), (x + w, y + h)], fill=color, width=thickness, joint="round")
 
     # Z grande (principal, saliendo del anillo) en naranja neón
-    z1_x = canvas_size * 0.56
-    z1_y = canvas_size * 0.38
-    draw_z(z1_x, z1_y, canvas_size * 0.17, canvas_size * 0.16, int(5.5 * scale),
+    z1_x = map_x(canvas_size * 0.56)
+    z1_y = map_y(canvas_size * 0.38)
+    draw_z(z1_x, z1_y, canvas_size * 0.17 * safe_scale, canvas_size * 0.16 * safe_scale, int(5.5 * scale * safe_scale),
            color=(255, 130, 0, 255), glow_color=(255, 80, 0, 120))
 
     # Z mediana (flotando más arriba a la derecha) en naranja cálido
-    z2_x = canvas_size * 0.72
-    z2_y = canvas_size * 0.22
-    draw_z(z2_x, z2_y, canvas_size * 0.12, canvas_size * 0.11, int(4.0 * scale),
+    z2_x = map_x(canvas_size * 0.72)
+    z2_y = map_y(canvas_size * 0.22)
+    draw_z(z2_x, z2_y, canvas_size * 0.12 * safe_scale, canvas_size * 0.11 * safe_scale, int(4.0 * scale * safe_scale),
            color=(255, 155, 10, 245), glow_color=(255, 105, 0, 100))
 
     # z pequeña (más tenue) en naranja ámbar
-    z3_x = canvas_size * 0.82
-    z3_y = canvas_size * 0.11
-    draw_z(z3_x, z3_y, canvas_size * 0.08, canvas_size * 0.07, int(2.8 * scale),
+    z3_x = map_x(canvas_size * 0.82)
+    z3_y = map_y(canvas_size * 0.11)
+    draw_z(z3_x, z3_y, canvas_size * 0.08 * safe_scale, canvas_size * 0.07 * safe_scale, int(2.8 * scale * safe_scale),
            color=(255, 180, 40, 225), glow_color=(255, 130, 0, 80))
 
     # Estrellitas brillantes sutiles
     for sx_rel, sy_rel in [(0.42, 0.20), (0.76, 0.52), (0.88, 0.32)]:
-        px = canvas_size * sx_rel
-        py = canvas_size * sy_rel
-        s_len = int(4 * scale)
-        draw.line([(px - s_len, py), (px + s_len, py)], fill=(255, 255, 255, 200), width=scale)
-        draw.line([(px, py - s_len), (px, py + s_len)], fill=(255, 255, 255, 200), width=scale)
+        px = map_x(canvas_size * sx_rel)
+        py = map_y(canvas_size * sy_rel)
+        s_len = int(4 * scale * safe_scale)
+        draw.line([(px - s_len, py), (px + s_len, py)], fill=(255, 255, 255, 200), width=int(scale * safe_scale))
+        draw.line([(px, py - s_len), (px, py + s_len)], fill=(255, 255, 255, 200), width=int(scale * safe_scale))
 
     return img.resize((size, size), Image.Resampling.LANCZOS)
 

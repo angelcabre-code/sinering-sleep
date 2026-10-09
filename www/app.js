@@ -350,11 +350,9 @@ function handleRecordedPulse(bpm) {
   // Actualizar UI en vivo
   const elLiveHr = document.getElementById('active-live-hr');
   const elLiveStage = document.getElementById('active-live-stage');
-  const elAmbientHr = document.getElementById('ambient-hr');
 
   if (elLiveHr) elLiveHr.textContent = `${bpm} lpm`;
   if (elLiveStage) elLiveStage.textContent = stageName;
-  if (elAmbientHr) elAmbientHr.textContent = `♥ ${bpm} lpm (${stageName})`;
 
   // Guardar en sesión activa
   if (activeSession) {
@@ -661,6 +659,8 @@ function switchTab(tabId) {
     renderHistoryList();
   } else if (tabId === 'settings') {
     updateSettingsUI();
+  } else if (tabId === 'monitor') {
+    renderHypnogramChart(currentSessionPoints);
   }
 }
 
@@ -806,22 +806,8 @@ function displayHistoryDetail(session) {
   document.getElementById('hist-lbl-light').textContent = `${light}m (${Math.round(light/tot*100)}%)`;
   document.getElementById('hist-lbl-awake').textContent = `${awake}m (${Math.round(awake/tot*100)}%)`;
 
-  // Renderizar hipnograma histórico
-  const path = document.getElementById('hist-hypno-path');
-  const points = session.points || [];
-  if (path) {
-    if (points && points.length >= 2) {
-      const coords = points.map((p, i) => {
-        const x = (i / (points.length - 1)) * 360;
-        const clampedBpm = Math.min(Math.max(p.bpm, 45), 90);
-        const y = 115 - ((clampedBpm - 45) / 45) * 100;
-        return `${x.toFixed(1)},${y.toFixed(1)}`;
-      });
-      path.setAttribute('d', `M ${coords.join(' L ')}`);
-    } else {
-      path.setAttribute('d', '');
-    }
-  }
+  // Renderizar hipnograma vectorial histórico
+  renderHypnogramSVG('hist-hypnogram-container', session.points || []);
 
   const diag = document.getElementById('hist-detail-diag');
   if (diag) {
@@ -866,26 +852,153 @@ function renderHistoryList() {
   });
 }
 
-function renderHypnogramChart(points) {
-  const path = document.getElementById('hypno-path');
-  const txtCount = document.getElementById('txt-chart-points');
-  if (!path) return;
+function renderHypnogramSVG(containerId, points, options = {}) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
 
-  if (txtCount) txtCount.textContent = `${points.length} mediciones`;
+  const W = 520;
+  const H = 245;
+  const leftGutter = 82;
+  const rightGutter = 16;
+  const plotW = W - leftGutter - rightGutter;
 
-  if (!points || points.length < 2) {
-    path.setAttribute('d', '');
+  // 4 Niveles Fisiológicos (Y de referencia)
+  const stageDefs = {
+    awake:  { y: 32,  label: 'Despierto', color: '#f59e0b', bg: 'rgba(245, 158, 11, 0.08)' },
+    rem:    { y: 72,  label: 'REM',       color: '#ec4899', bg: 'rgba(236, 72, 153, 0.08)' },
+    light:  { y: 112, label: 'Ligero',    color: '#06b6d4', bg: 'rgba(6, 182, 212, 0.08)' },
+    deep:   { y: 152, label: 'Profundo',  color: '#6366f1', bg: 'rgba(99, 102, 241, 0.08)' }
+  };
+
+  let svg = `<svg viewBox="0 0 ${W} ${H}" width="100%" height="auto" style="display:block; overflow:visible; font-family:-apple-system,BlinkMacSystemFont,sans-serif;">
+    <defs>
+      <linearGradient id="hypnoAreaGrad_${containerId}" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#8b5cf6" stop-opacity="0.25"/>
+        <stop offset="100%" stop-color="#4f46e5" stop-opacity="0.02"/>
+      </linearGradient>
+      <linearGradient id="hrLineGrad_${containerId}" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0%" stop-color="#38bdf8"/>
+        <stop offset="50%" stop-color="#f43f5e"/>
+        <stop offset="100%" stop-color="#38bdf8"/>
+      </linearGradient>
+    </defs>`;
+
+  // 1. Fondos de bandas horizontales de fases
+  const bands = [
+    { y: 14, h: 38, def: stageDefs.awake },
+    { y: 52, h: 40, def: stageDefs.rem },
+    { y: 92, h: 40, def: stageDefs.light },
+    { y: 132, h: 38, def: stageDefs.deep },
+  ];
+
+  bands.forEach(b => {
+    svg += `<rect x="${leftGutter}" y="${b.y}" width="${plotW}" height="${b.h}" fill="${b.def.bg}" rx="4" />`;
+    svg += `<line x1="${leftGutter}" y1="${b.def.y}" x2="${W - rightGutter}" y2="${b.def.y}" stroke="currentColor" stroke-opacity="0.08" stroke-dasharray="3,3" />`;
+    svg += `<circle cx="${leftGutter - 70}" cy="${b.def.y}" r="3.5" fill="${b.def.color}" />`;
+    svg += `<text x="${leftGutter - 60}" y="${b.def.y + 3.5}" fill="currentColor" opacity="0.85" font-size="10.5" font-weight="700">${b.def.label}</text>`;
+  });
+
+  if (!points || points.length === 0) {
+    svg += `<text x="${leftGutter + plotW/2}" y="95" fill="currentColor" opacity="0.4" font-size="12" font-weight="600" text-anchor="middle">En espera de mediciones nocturnas...</text>`;
+    svg += `<text x="${leftGutter + plotW/2}" y="115" fill="currentColor" opacity="0.25" font-size="10" text-anchor="middle">Inicia la sesión y el anillo registrará tus fases cada ciclo</text>`;
+    svg += `</svg>`;
+    container.innerHTML = svg;
     return;
   }
 
-  const coords = points.map((p, i) => {
-    const x = (i / (points.length - 1)) * 360;
-    const clampedBpm = Math.min(Math.max(p.bpm, 45), 90);
-    const y = 115 - ((clampedBpm - 45) / 45) * 100;
-    return `${x.toFixed(1)},${y.toFixed(1)}`;
+  const n = points.length;
+  const getX = (i) => {
+    if (n === 1) return leftGutter + plotW / 2;
+    return leftGutter + (i / (n - 1)) * plotW;
+  };
+
+  const getY = (stage) => (stageDefs[stage] || stageDefs.light).y;
+
+  // 2. Step Chart (Polisomnografía médica estándar)
+  let stepPath = '';
+  let areaPath = '';
+
+  if (n === 1) {
+    const x0 = getX(0);
+    const y0 = getY(points[0].stage);
+    stepPath = `M ${leftGutter} ${y0} L ${W - rightGutter} ${y0}`;
+  } else {
+    const pts = points.map((p, i) => ({ x: getX(i), y: getY(p.stage), p }));
+    stepPath = `M ${pts[0].x.toFixed(1)} ${pts[0].y.toFixed(1)}`;
+    areaPath = `M ${pts[0].x.toFixed(1)} 170 L ${pts[0].x.toFixed(1)} ${pts[0].y.toFixed(1)}`;
+
+    for (let i = 0; i < pts.length - 1; i++) {
+      const cur = pts[i];
+      const next = pts[i + 1];
+      const midX = ((cur.x + next.x) / 2).toFixed(1);
+      stepPath += ` L ${midX} ${cur.y.toFixed(1)} L ${midX} ${next.y.toFixed(1)} L ${next.x.toFixed(1)} ${next.y.toFixed(1)}`;
+      areaPath += ` L ${midX} ${cur.y.toFixed(1)} L ${midX} ${next.y.toFixed(1)} L ${next.x.toFixed(1)} ${next.y.toFixed(1)}`;
+    }
+    const last = pts[pts.length - 1];
+    areaPath += ` L ${last.x.toFixed(1)} 170 Z`;
+  }
+
+  if (areaPath) {
+    svg += `<path d="${areaPath}" fill="url(#hypnoAreaGrad_${containerId})" />`;
+  }
+
+  svg += `<path d="${stepPath}" fill="none" stroke="var(--accent-sleep)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />`;
+
+  // Puntos individuales con datos
+  points.forEach((p, i) => {
+    const px = getX(i);
+    const py = getY(p.stage);
+    const col = (stageDefs[p.stage] || stageDefs.light).color;
+    svg += `<g class="hypno-node">
+      <circle cx="${px.toFixed(1)}" cy="${py.toFixed(1)}" r="4.5" fill="${col}" stroke="#ffffff" stroke-width="1.8">
+        <title>${p.time || ''} • ${p.bpm || '--'} lpm (${stageDefs[p.stage]?.label || ''})</title>
+      </circle>
+    </g>`;
   });
 
-  path.setAttribute('d', `M ${coords.join(' L ')}`);
+  // 3. Eje Horario X
+  svg += `<line x1="${leftGutter}" y1="172" x2="${W - rightGutter}" y2="172" stroke="currentColor" stroke-opacity="0.12" />`;
+  const tickCount = Math.min(n, 5);
+  for (let k = 0; k < tickCount; k++) {
+    const idx = Math.round(k * (n - 1) / Math.max(tickCount - 1, 1));
+    const pt = points[idx];
+    if (pt && pt.time) {
+      const tx = getX(idx);
+      svg += `<line x1="${tx.toFixed(1)}" y1="172" x2="${tx.toFixed(1)}" y2="176" stroke="currentColor" stroke-opacity="0.25" />`;
+      const anchor = k === 0 ? 'start' : (k === tickCount - 1 ? 'end' : 'middle');
+      svg += `<text x="${tx.toFixed(1)}" y="188" fill="currentColor" opacity="0.65" font-size="9.5" font-weight="600" text-anchor="${anchor}">${pt.time}</text>`;
+    }
+  }
+
+  // 4. Sub-gráfica de Frecuencia Cardíaca
+  const bpms = points.map(p => p.bpm).filter(b => b > 30 && b < 160);
+  if (bpms.length >= 2) {
+    const minBpm = Math.min(...bpms);
+    const maxBpm = Math.max(...bpms);
+    const bpmSpan = Math.max(maxBpm - minBpm, 15);
+    const hrBaseY = 236;
+    const hrHeight = 30;
+
+    const hrPts = points.map((p, i) => {
+      const hx = getX(i);
+      const hy = hrBaseY - (((p.bpm - minBpm) / bpmSpan) * hrHeight);
+      return `${hx.toFixed(1)},${hy.toFixed(1)}`;
+    });
+
+    svg += `<rect x="${leftGutter}" y="198" width="${plotW}" height="38" fill="currentColor" fill-opacity="0.02" rx="4" />`;
+    svg += `<text x="${leftGutter - 70}" y="218" fill="currentColor" opacity="0.75" font-size="9.5" font-weight="700">♥ Pulso</text>`;
+    svg += `<text x="${leftGutter - 70}" y="228" fill="currentColor" opacity="0.45" font-size="8">${minBpm}-${maxBpm} lpm</text>`;
+    svg += `<path d="M ${hrPts.join(' L ')}" fill="none" stroke="url(#hrLineGrad_${containerId})" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity="0.9" />`;
+  }
+
+  svg += `</svg>`;
+  container.innerHTML = svg;
+}
+
+function renderHypnogramChart(points) {
+  const txtCount = document.getElementById('txt-chart-points');
+  if (txtCount) txtCount.textContent = `${points ? points.length : 0} mediciones`;
+  renderHypnogramSVG('hypnogram-container', points || []);
 }
 
 // -------------------------------------------------------------
@@ -958,16 +1071,6 @@ async function clearAllData() {
   alert("✓ Todo el historial de sueño ha sido borrado.");
 }
 
-function enterAmbientMode() {
-  const screen = document.getElementById('ambient-screen');
-  if (screen) screen.style.display = 'flex';
-}
-
-function exitAmbientMode() {
-  const screen = document.getElementById('ambient-screen');
-  if (screen) screen.style.display = 'none';
-}
-
 // -------------------------------------------------------------
 // 7. INICIALIZACIÓN
 // -------------------------------------------------------------
@@ -979,11 +1082,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     const dateStr = now.toLocaleDateString([], { weekday: 'long', day: 'numeric', month: 'long' });
     const clockEl = document.getElementById('disp-clock');
     const dateEl = document.getElementById('disp-date');
-    const ambClock = document.getElementById('ambient-clock');
 
     if (clockEl) clockEl.textContent = timeStr;
     if (dateEl) dateEl.textContent = dateStr;
-    if (ambClock) ambClock.textContent = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   }, 1000);
 
   // Inicializar almacenamiento persistente dual automático (IndexedDB + localStorage)
