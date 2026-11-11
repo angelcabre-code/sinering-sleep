@@ -588,6 +588,143 @@
       border: 1px solid rgba(239, 68, 68, 0.5);
     }
 
+    /* Botones de contacto de Psicología y Sinergia */
+    .contact-pill {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.4rem;
+      padding: 0.55rem 0.6rem;
+      border-radius: 10px;
+      text-decoration: none;
+      font-size: 0.74rem;
+      font-weight: 700;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      transition: all 0.2s ease;
+    }
+
+    .contact-pill.web {
+      background: rgba(6, 182, 212, 0.12);
+      border-color: rgba(6, 182, 212, 0.35);
+      color: var(--accent-cyan);
+    }
+
+    .contact-pill.instagram {
+      background: rgba(236, 72, 153, 0.12);
+      border-color: rgba(236, 72, 153, 0.35);
+      color: #f472b6;
+    }
+
+    .contact-pill.email {
+      background: rgba(16, 185, 129, 0.12);
+      border-color: rgba(16, 185, 129, 0.35);
+      color: #34d399;
+    }
+
+    .contact-pill:hover, .contact-pill:active {
+      transform: translateY(-1px);
+      filter: brightness(1.15);
+    }
+
+    /* Modal de Compendio Científico */
+    .modal-backdrop {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      z-index: 9999;
+      display: flex;
+      justify-content: center;
+      align-items: flex-end;
+      padding: 0;
+      animation: modalFadeIn 0.2s ease;
+    }
+
+    .modal-sheet {
+      background: var(--bg-card);
+      border-top: 1px solid var(--bg-card-border);
+      border-radius: 20px 20px 0 0;
+      width: 100%;
+      max-width: 650px;
+      max-height: 85vh;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.6);
+      animation: modalSlideUp 0.25s ease;
+    }
+
+    .modal-sheet-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 1.1rem;
+      border-bottom: 1px solid var(--bg-card-border);
+    }
+
+    .btn-close-modal {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid var(--bg-card-border);
+      color: var(--text-main);
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 0.95rem;
+    }
+
+    .modal-sheet-body {
+      padding: 1.1rem;
+      overflow-y: auto;
+      font-size: 0.8rem;
+      line-height: 1.6;
+      color: var(--text-sub);
+    }
+
+    .modal-sheet-body h3 {
+      color: var(--text-main);
+      font-size: 0.95rem;
+      margin: 1.1rem 0 0.4rem 0;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .modal-sheet-body h3:first-child {
+      margin-top: 0;
+    }
+
+    .modal-sheet-body p {
+      margin-bottom: 0.65rem;
+    }
+
+    .modal-sheet-body strong {
+      color: var(--text-main);
+    }
+
+    .modal-sheet-body .science-callout {
+      background: rgba(255, 255, 255, 0.03);
+      border-left: 3px solid var(--accent-cyan);
+      padding: 0.6rem 0.8rem;
+      border-radius: 0 8px 8px 0;
+      margin: 0.7rem 0;
+      font-size: 0.76rem;
+    }
+
+    @keyframes modalFadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @keyframes modalSlideUp {
+      from { transform: translateY(50px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
     /* Terminal de depuración plegable */
     #ble-console {
       max-height: 110px;
@@ -1200,7 +1337,51 @@
         <div style="margin-top:0.45rem; color:var(--accent-cyan);">💡 <em>Para añadirlo: Mantén pulsado un espacio vacío en tu pantalla de inicio de Android > Widgets > SineRing Sleep.</em></div>
       </div>
     </div>
-  </main>
+
+    <!-- 9. Créditos y Autoría: Psicología y Sinergia -->
+    <div class="card" id="card-credits">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.4rem;">
+        <div style="font-weight:700; font-size:0.95rem; display:flex; align-items:center; gap:0.4rem;">
+          <span>🧠</span> <span>Psicología y Sinergia</span>
+        </div>
+        <span style="font-size:0.7rem; padding:0.15rem 0.5rem; border-radius:6px; background:rgba(6,182,212,0.18); color:var(--accent-cyan); font-weight:700;">Open Source</span>
+      </div>
+      <div style="font-size:0.75rem; color:var(--text-sub); margin-bottom:0.75rem; line-height:1.45;">
+        <strong>SineRing Sleep</strong> es una aplicación de código abierto desarrollada y mantenida por <strong>Psicología y Sinergia</strong>. Creada para ofrecer una monitorización del descanso rigurosa, fundamentada en la neurociencia del sueño y 100% privada, libre de servidores externos, cuentas y algoritmos comerciales sesgados.
+      </div>
+
+      <!-- Botón para ver el compendio científico completo -->
+      <button class="btn-secondary" style="width:100%; justify-content:center; background:rgba(6,182,212,0.12); border-color:rgba(6,182,212,0.35); color:var(--accent-cyan); font-size:0.78rem; font-weight:700; padding:0.6rem; margin-bottom:0.75rem;" onclick="openScienceModal()">
+        <span>🔬</span> <span>Compendio Científico y Médico</span>
+      </button>
+
+      <!-- Fila de los 3 botones de contacto -->
+      <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:0.45rem;">
+        <a href="https://www.psicologiaysinergia.es/" target="_blank" rel="noopener noreferrer" class="contact-pill web" title="Sitio Web">
+          <svg style="width:15px; height:15px;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="2" y1="12" x2="22" y2="12"></line>
+            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+          </svg>
+          <span>Web</span>
+        </a>
+        <a href="https://www.instagram.com/psicologiaysinergia/" target="_blank" rel="noopener noreferrer" class="contact-pill instagram" title="Instagram">
+          <svg style="width:15px; height:15px;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+            <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+            <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+          </svg>
+          <span>Instagram</span>
+        </a>
+        <a href="mailto:info@psicologiaysinergia.es" class="contact-pill email" title="Email">
+          <svg style="width:15px; height:15px;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+            <polyline points="22,6 12,13 2,6"></polyline>
+          </svg>
+          <span>Email</span>
+        </a>
+      </div>
+    </div>
   </main>
 
   <!-- BARRA DE NAVEGACIÓN INFERIOR (3 PESTAÑAS) -->
@@ -1218,6 +1399,60 @@
       <div class="nav-label">Ajustes</div>
     </div>
   </nav>
+
+  <!-- MODAL DE COMPENDIO CIENTÍFICO Y MÉDICO -->
+  <div id="modal-science" class="modal-backdrop" style="display:none;" onclick="if(event.target===this) closeScienceModal()">
+    <div class="modal-sheet">
+      <div class="modal-sheet-header">
+        <div style="display:flex; align-items:center; gap:0.6rem;">
+          <span style="font-size:1.3rem;">🔬</span>
+          <div>
+            <div style="font-weight:800; font-size:0.92rem; color:var(--text-main);">Compendio Científico del Sueño</div>
+            <div style="font-size:0.7rem; color:var(--text-sub);">Fundamentación médica de SineRing Sleep • Psicología y Sinergia</div>
+          </div>
+        </div>
+        <button class="btn-close-modal" onclick="closeScienceModal()" aria-label="Cerrar modal">✕</button>
+      </div>
+      <div class="modal-sheet-body">
+        <h3>🌌 1. Cronobiología y Arquitectura Ultradiana</h3>
+        <p>El sueño humano es un proceso neurobiológico activo regulado por el <strong>Proceso S (Homeostático)</strong> —acumulación progresiva de adenosina durante la vigilia— y el <strong>Proceso C (Circadiano)</strong>, comandado por el <strong>núcleo supraquiasmático (SCN)</strong> en respuesta a los ciclos de luz y oscuridad mediante la melatonina pineal.</p>
+        <div class="science-callout">
+          <strong>La regla de los 90-110 minutos:</strong> Un descanso saludable transita por 4 a 5 ciclos ultradianos continuos. En los dos primeros ciclos se concentra la casi totalidad del sueño profundo N3 (reparación tisular); en los ciclos 3, 4 y 5 se concentra más del 65% de la fase REM (recalibración neuro-emocional).
+        </div>
+
+        <h3>🧠 2. Fisiología de Fases: N3 Delta y REM</h3>
+        <p>• <strong>Sueño Profundo N3 (&lt; 4 Hz):</strong> Activación del <em>sistema glinfático cerebral</em> (Nedergaard et al., Univ. Rochester). El espacio intersticial se expande un 60%, drenando residuos metabólicos, proteínas beta-amiloide y tau. La hipófisis anterior alcanza el pico máximo de liberación de <em>somatotropina (GH)</em> para regeneración celular.</p>
+        <p>• <strong>Fase REM ("Terapia Nocturna"):</strong> Silenciamiento de noradrenalina en el <em>locus coeruleus</em> (Matthew Walker). Permite procesar recuerdos emocionales intensos sin reactividad de estrés, consolidar la memoria procedural y reorganizar la conectividad sináptica cortical.</p>
+        <p>• <strong>Fases N1 / N2 (Sueño Ligero):</strong> Generación de <em>husos de sueño</em> (sleep spindles) talámicos que protegen la corteza de despertares por ruido y transfieren recuerdos desde el hipocampo a la neocorteza.</p>
+
+        <h3>❤️ 3. Descenso Cardíaco Nocturno (Dipping)</h3>
+        <p>Durante la noche, el tono simpático debe atenuarse a favor del tono <strong>parasimpático o vagal</strong>. El pulso debe descender entre un <strong>10% y un 20%</strong> respecto a la frecuencia de reposo diurna (*patrón Dipper fisiológico*), permitiendo el descanso del miocardio y la relajación endotelial.</p>
+        <div class="science-callout">
+          <strong>Patrón Non-Dipper (&lt;10%):</strong> Factor de riesgo cardiovascular independiente. Refleja estrés crónico, cortisol nocturno residual o sobrecarga metabólica por digestiones tardías.
+        </div>
+
+        <h3>🌡️ 4. Termorregulación Cutánea (Sensor NTC)</h3>
+        <p>Para consolidar el sueño profundo N3, la temperatura corporal central (*core*) debe enfriarse ~0.5°C a 1.0°C. Para lograrlo, el sistema vascular abre las anastomosis arteriovenosas distales en manos y pies (*Kräuchi et al., Nature*). El aumento térmico en el dedo medido por el anillo durante la primera hora es la firma de disipación activa de calor.</p>
+        <p>Una elevación sostenida &gt; +0.5°C sobre la línea base habitual es uno de los biomarcadores más precoces de infección subclínica, respuesta inflamatoria activa o disrupción por ingesta de alcohol.</p>
+
+        <h3>⏱️ 5. Duración y Ley de Liebig: Por qué 4h no es "Aceptable"</h3>
+        <p>El consenso médico <strong>AASM &amp; SRS (Watson et al., 2015)</strong> establece un requerimiento biológico de <strong>7 a 8.5 horas</strong> en adultos sanos. Menos de 5 horas causa fatiga ejecutiva acumulativa, picos de resistencia a la insulina y pérdida del 60-70% del sueño REM.</p>
+        <div class="science-callout">
+          <strong>Ley del Mínimo de Liebig:</strong> La eficiencia de sueño NO puede compensar la falta de horas biológicas. En SineRing Sleep, un sueño de 4 horas tiene un techo fisiológico estricto de <strong>42 / 100</strong> (clasificado como <em>Deficiente • Privación Aguda</em>).
+        </div>
+
+        <h3>💤 6. Cronobiología de Siestas</h3>
+        <p>• <strong>Power Nap (20-30 min):</strong> Permite acceder a husos N2 para restaurar la vigilia ejecutiva sin alcanzar ondas lentas delta, evitando la inercia de sueño (*grogginess*).<br>
+        • <strong>Ciclo Completo (85-100 min):</strong> Cubre un ciclo ultradiano entero, excelente si existe deuda de sueño.<br>
+        • <strong>Siestas &gt; 120 min:</strong> Desaconsejadas por disipar prematuramente la presión homeostática requerida para el sueño nocturno.</p>
+
+        <div style="margin-top:1.2rem; padding:0.8rem; background:rgba(255,255,255,0.03); border-radius:10px; border:1px solid var(--bg-card-border); text-align:center; font-size:0.75rem;">
+          <div style="font-weight:700; color:var(--text-main); margin-bottom:0.25rem;">Psicología y Sinergia • Código Abierto</div>
+          <div style="color:var(--text-sub);">Comprometidos con la divulgación científica rigurosa y la privacidad digital.</div>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <script src="ble.bundle.js"></script>
   <script src="app.js"></script>

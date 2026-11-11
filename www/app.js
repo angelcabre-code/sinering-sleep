@@ -3506,3 +3506,20 @@ document.addEventListener("DOMContentLoaded", async () => {
   // Iniciar BLE nativo
   await initNativeBle();
 });
+
+// -------------------------------------------------------------
+// 8. MODAL DE COMPENDIO CIENTÍFICO (PSICOLOGÍA Y SINERGIA)
+// -------------------------------------------------------------
+function openScienceModal() {
+  const modal = document.getElementById('modal-science');
+  if (modal) {
+    modal.style.display = 'flex';
+  }
+}
+
+function closeScienceModal() {
+  const modal = document.getElementById('modal-science');
+  if (modal) {
+    modal.style.display = 'none';
+  }
+}
