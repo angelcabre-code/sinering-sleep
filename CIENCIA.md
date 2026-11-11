@@ -96,5 +96,5 @@ En los algoritmos comerciales de consumo suele incurrirse en el error de sumar l
 - **Desarrollo y Supervisión Científica:** Equipo de **Psicología y Sinergia**
 - **Sitio Web Oficial:** [https://www.psicologiaysinergia.es/](https://www.psicologiaysinergia.es/)
 - **Instagram:** [@psicologiaysinergia](https://www.instagram.com/psicologiaysinergia/)
-- **Contacto:** [info@psicologiaysinergia.es](mailto:info@psicologiaysinergia.es)
+- **Contacto:** [contacto@psicologiaysinergia.es](mailto:contacto@psicologiaysinergia.es)
 - **Licencia:** MIT License • Código Abierto para la Comunidad

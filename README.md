@@ -159,6 +159,16 @@ SineRing Sleep only requests strictly required hardware permissions:
 
 ---
 
+## 🏛️ Credits & Authorship
+
+Developed and maintained by **Psicología y Sinergia**:
+- **Website:** [https://www.psicologiaysinergia.es/](https://www.psicologiaysinergia.es/)
+- **Instagram:** [@psicologiaysinergia](https://www.instagram.com/psicologiaysinergia/)
+- **Contact:** [contacto@psicologiaysinergia.es](mailto:contacto@psicologiaysinergia.es)
+- **Scientific Compendium:** See [CIENCIA.md](CIENCIA.md) for the complete physiological and medical foundations.
+
+---
+
 ## 📄 License
 
 This project is licensed under the **MIT License**. Open source and free for the community.
