@@ -805,7 +805,8 @@ function parseColmiSleepBigData(payload) {
 }
 
 // -------------------------------------------------------------
-// ALGORITMO CLÍNICO DETERMINANTE DE PUNTUACIÓN DE SUEÑO (0-100)
+// ALGORITMO CLÍNICO BASADO EN CONSENSO AASM / SRS (Watson et al., 2015)
+// & POLISOMNOGRAFÍA DE WEARABLES (de Zambotti et al., 2019)
 // -------------------------------------------------------------
 function computeClinicalSleepScore({ realSleepMinutes, deepMinutes, remMinutes, lightMinutes, awakeMinutes, isNap = false }) {
   const totalInBed = realSleepMinutes + awakeMinutes;
@@ -815,91 +816,110 @@ function computeClinicalSleepScore({ realSleepMinutes, deepMinutes, remMinutes, 
 
   // --- MODO SIESTA DIURNA ---
   if (isNap) {
-    let napScore = 80;
-    if (realSleepMinutes >= 20 && realSleepMinutes <= 45) {
-      napScore = 93; // Power nap reparadora óptima
-    } else if (realSleepMinutes > 45 && realSleepMinutes <= 85) {
-      napScore = 87; // Siesta de ciclo medio
-    } else if (realSleepMinutes > 85 && realSleepMinutes <= 120) {
-      napScore = 82; // Ciclo completo de ~90m
+    let napScore = 78;
+    if (realSleepMinutes >= 20 && realSleepMinutes <= 40) {
+      napScore = 94; // Power nap óptima (husos de sueño N2 sin inercia)
+    } else if (realSleepMinutes > 40 && realSleepMinutes <= 80) {
+      napScore = 86; // Siesta de ciclo medio
+    } else if (realSleepMinutes > 80 && realSleepMinutes <= 110) {
+      napScore = 82; // Ciclo ultradiano completo (~90 min)
     } else {
-      napScore = 74; // Siesta excesiva (>2h) que induce inercia de sueño
+      napScore = 68; // Siesta excesiva (>2h): disrupción del impulso homeostático
     }
 
-    if (deepMinutes >= 8) napScore += 3;
-    if (remMinutes >= 12) napScore += 3;
-    napScore = Math.min(97, Math.max(60, napScore));
+    if (deepMinutes >= 10) napScore += 3;
+    if (remMinutes >= 15) napScore += 3;
+    napScore = Math.min(98, Math.max(45, napScore));
 
     let quality = 'Siesta Reparadora';
     if (napScore >= 90) quality = 'Siesta Óptima';
     else if (napScore >= 80) quality = 'Siesta Buena';
-    else quality = 'Siesta Ligera';
+    else if (napScore >= 65) quality = 'Siesta Regular';
+    else quality = 'Siesta Excesiva / Inercia';
 
     const efficiency = totalInBed > 0 ? Math.min(100, Math.round((realSleepMinutes / totalInBed) * 100)) : 90;
     return { score: napScore, quality, efficiency };
   }
 
   // --- MODO SUEÑO NOCTURNO COMPLETO ---
-  // 1. Duración Real de Sueño (50% de peso determinante)
-  // Adulto estándar: 420m (7h) a 510m (8.5h) óptimo.
+
+  // 1. Duración Real de Sueño (55% de peso determinante)
+  // AASM / Sleep Research Society: Rango óptimo biológico en adultos: 7h (420m) a 8.5h (510m).
+  // La curva es sigmoidea no lineal: cae vertiginosamente por debajo de 5h (privación severa).
   let durationScore = 0;
-  if (realSleepMinutes < 180) { // < 3 horas: privación crítica
-    durationScore = Math.max(15, Math.round((realSleepMinutes / 180) * 40));
+  if (realSleepMinutes < 180) { // < 3 horas: privación crítica extrema
+    durationScore = Math.max(10, Math.round((realSleepMinutes / 180) * 25));
   } else if (realSleepMinutes < 240) { // 3h a 4h (180 - 240m)
-    durationScore = 40 + Math.round(((realSleepMinutes - 180) / 60) * 15); // 40 -> 55
+    durationScore = 25 + Math.round(((realSleepMinutes - 180) / 60) * 12); // 25 -> 37
   } else if (realSleepMinutes < 300) { // 4h a 5h (240 - 300m)
-    durationScore = 55 + Math.round(((realSleepMinutes - 240) / 60) * 15); // 55 -> 70
+    durationScore = 37 + Math.round(((realSleepMinutes - 240) / 60) * 15); // 37 -> 52
   } else if (realSleepMinutes < 360) { // 5h a 6h (300 - 360m)
-    durationScore = 70 + Math.round(((realSleepMinutes - 300) / 60) * 12); // 70 -> 82
+    durationScore = 52 + Math.round(((realSleepMinutes - 300) / 60) * 16); // 52 -> 68
   } else if (realSleepMinutes < 420) { // 6h a 7h (360 - 420m)
-    durationScore = 82 + Math.round(((realSleepMinutes - 360) / 60) * 11); // 82 -> 93
-  } else if (realSleepMinutes <= 510) { // 7h a 8.5h (420 - 510m) -> ÓPTIMO CLÍNICO
-    durationScore = 95 + Math.round(((realSleepMinutes - 420) / 90) * 5); // 95 -> 100
-  } else if (realSleepMinutes <= 600) { // 8.5h a 10h
-    durationScore = 95 - Math.round(((realSleepMinutes - 510) / 90) * 10); // 95 -> 85
-  } else { // > 10h (Hipersomnia)
-    durationScore = Math.max(65, 85 - Math.round(((realSleepMinutes - 600) / 60) * 5));
+    durationScore = 68 + Math.round(((realSleepMinutes - 360) / 60) * 16); // 68 -> 84
+  } else if (realSleepMinutes <= 510) { // 7h a 8.5h (420 - 510m) -> GOLD STANDARD CLÍNICO
+    durationScore = 85 + Math.round(((realSleepMinutes - 420) / 90) * 15); // 85 -> 100
+  } else if (realSleepMinutes <= 600) { // 8.5h a 10h (Ligera hipersomnia)
+    durationScore = 96 - Math.round(((realSleepMinutes - 510) / 90) * 12); // 96 -> 84
+  } else { // > 10h (Hipersomnia prolongada)
+    durationScore = Math.max(60, 84 - Math.round(((realSleepMinutes - 600) / 60) * 8));
   }
 
-  // 2. Arquitectura de Fases (30% de la nota final)
+  // 2. Arquitectura de Fases (25% de peso determinante)
+  // Doble eje clínico: volumen neto en minutos + proporción porcentual.
+  // Deep N3: Mínimo necesario 50-60m; ideal 60-90m (15-22% del total)
   const deepPct = (deepMinutes / realSleepMinutes) * 100;
-  const remPct = (remMinutes / realSleepMinutes) * 100;
-  const deepScore = Math.min(100, Math.round((deepPct / 18) * 100)); // Ideal ~18-22%
-  const remScore = Math.min(100, Math.round((remPct / 22) * 100));   // Ideal ~22-25%
-  const architectureScore = Math.round(deepScore * 0.55 + remScore * 0.45);
+  const deepVolScore = Math.min(100, Math.round((deepMinutes / 60.0) * 100));
+  const deepPropScore = Math.min(100, Math.round((deepPct / 18.0) * 100));
+  const deepScore = Math.round(deepVolScore * 0.6 + deepPropScore * 0.4);
 
-  // 3. Eficiencia y Continuidad (20% de la nota final)
+  // REM: Mínimo necesario 60m; ideal 80-120m (20-25% del total)
+  // En sueños truncados (<5h), REM es la fase más dañada por concentrarse al final de la noche.
+  const remPct = (remMinutes / realSleepMinutes) * 100;
+  const remVolScore = Math.min(100, Math.round((remMinutes / 80.0) * 100));
+  const remPropScore = Math.min(100, Math.round((remPct / 22.0) * 100));
+  const remScore = Math.round(remVolScore * 0.6 + remPropScore * 0.4);
+
+  const architectureScore = Math.round(deepScore * 0.5 + remScore * 0.5);
+
+  // 3. Eficiencia y Continuidad (20% de peso determinante)
+  // AASM: Eficiencia clínica normal >= 85%. < 75% indica fragmentación severa.
   const efficiency = totalInBed > 0 ? Math.min(100, Math.round((realSleepMinutes / totalInBed) * 100)) : 85;
   let efficiencyScore = 50;
-  if (efficiency >= 92) efficiencyScore = 100;
-  else if (efficiency >= 85) efficiencyScore = 85 + (efficiency - 85) * 2;
-  else if (efficiency >= 75) efficiencyScore = 70 + (efficiency - 75) * 1.5;
-  else efficiencyScore = Math.max(30, efficiency);
+  if (efficiency >= 90) efficiencyScore = 100;
+  else if (efficiency >= 85) efficiencyScore = 85 + (efficiency - 85) * 3;
+  else if (efficiency >= 75) efficiencyScore = 65 + (efficiency - 75) * 2;
+  else efficiencyScore = Math.max(20, efficiency);
 
-  // Puntuación combinada ponderada
-  let finalScore = Math.round(
-    durationScore * 0.50 +
-    architectureScore * 0.30 +
+  // Puntuación preliminar ponderada
+  const prelimScore = Math.round(
+    durationScore * 0.55 +
+    architectureScore * 0.25 +
     efficiencyScore * 0.20
   );
 
-  // Límites fisiológicos máximos por déficit severo de horas de sueño:
-  if (realSleepMinutes <= 245) { // <= 4 horas de sueño: tope en 60 puntos
-    finalScore = Math.min(finalScore, 60);
-  } else if (realSleepMinutes < 300) { // < 5 horas: tope estricto en 70 puntos
-    finalScore = Math.min(finalScore, 70);
-  } else if (realSleepMinutes < 360) { // < 6 horas: tope en 80 puntos
-    finalScore = Math.min(finalScore, 80);
+  // 4. Techo Fisiológico Continuo (Ley del Mínimo de Liebig)
+  // La eficiencia o una alta fase delta inicial NO pueden compensar la ausencia biológica de horas.
+  // Curva de techo continuo derivada de bioestadística de privación de sueño:
+  let maxCeiling = 100;
+  if (realSleepMinutes <= 120) {
+    maxCeiling = 15;
+  } else if (realSleepMinutes < 420) {
+    const t = (realSleepMinutes - 120) / (420 - 120);
+    maxCeiling = Math.round(18 + Math.pow(t, 1.35) * 82);
   }
 
-  finalScore = Math.min(99, Math.max(25, finalScore));
+  let finalScore = Math.min(prelimScore, maxCeiling);
+  finalScore = Math.min(99, Math.max(15, finalScore));
 
+  // 5. Etiquetado Clínico Riguroso (AASM)
   let quality = 'Regular';
-  if (finalScore >= 90) quality = 'Óptimo';
-  else if (finalScore >= 80) quality = 'Bueno';
-  else if (finalScore >= 70) quality = 'Aceptable';
-  else if (finalScore >= 60) quality = 'Insuficiente';
-  else quality = 'Deficitario';
+  if (finalScore >= 88) quality = 'Excelente';
+  else if (finalScore >= 78) quality = 'Bueno';
+  else if (finalScore >= 65) quality = 'Aceptable (Límite)';
+  else if (finalScore >= 50) quality = 'Insuficiente';
+  else if (finalScore >= 35) quality = 'Deficiente (Privación)';
+  else quality = 'Crítico';
 
   return { score: finalScore, quality, efficiency };
 }
@@ -2005,23 +2025,49 @@ function generateMedicalDiagnosis(rep) {
   }
 
   // 1. Resumen Clínico
+  let durationAlert = '';
+  if (totMin < 300) { // < 5 horas
+    durationAlert = `
+      <div style="background:rgba(239,68,68,0.12); border:1px solid rgba(239,68,68,0.35); padding:0.55rem 0.75rem; border-radius:8px; margin-bottom:0.55rem; font-size:0.75rem; color:#fca5a5; line-height:1.45;">
+        ⚠️ <strong>Alerta Clínica: Privación Aguda de Sueño (&lt;5 horas)</strong><br>
+        Se registraron únicamente <strong>${Math.floor(totMin/60)}h ${totMin%60}m</strong> (${cycles} ciclo/s). Aunque la eficiencia haya sido alta, un descanso tan corto trunca bruscamente la segunda mitad de la noche, donde se concentra más del 65% del sueño REM. El consenso AASM/SRS (Watson et al., 2015) establece un mínimo de 7h en adultos para evitar fatiga diurna acumulativa, elevación de cortisol matutino y déficits ejecutivos.
+      </div>`;
+  } else if (totMin < 390) { // 5h a 6.5h
+    durationAlert = `
+      <div style="background:rgba(245,158,11,0.12); border:1px solid rgba(245,158,11,0.3); padding:0.5rem 0.7rem; border-radius:8px; margin-bottom:0.55rem; font-size:0.74rem; color:#fde68a; line-height:1.4;">
+        ⚡ <strong>Aviso: Sueño Corto en Límite Funcional (5h a 6.5h)</strong><br>
+        Completaste ${cycles} ciclos. Cubre requerimientos basales inmediatos pero se sitúa por debajo del rango óptimo recomendado (7h a 8.5h).
+      </div>`;
+  }
+
+  const phaseAssessmentText = totMin < 300
+    ? `Déficit de volumen en REM (${remMin} min). El sueño profundo N3 (${deepMin} min) se priorizó homeostáticamente al inicio, pero la arquitectura global quedó incompleta.`
+    : `Cumple las proporciones biomédicas de restauración somatocelular y cognitiva.`;
+
   const summary = `
+    ${durationAlert}
     <div style="margin-bottom:0.6rem;">
       <div style="font-weight:700; color:var(--text-main); font-size:0.85rem; margin-bottom:0.25rem;">
-        🩺 Arquitectura del Sueño • Puntuación: <span style="color:var(--accent-cyan); font-weight:900;">${rep.sleep_score}/100</span>
+        🩺 Arquitectura del Sueño • Puntuación: <span style="color:var(--accent-cyan); font-weight:900;">${rep.sleep_score}/100</span> (${rep.quality || 'Evaluación'})
       </div>
       <div>
-        Se registraron <strong>${Math.floor(totMin/60)}h ${totMin%60}m de descanso</strong> estructurados en <strong>${cycles} ciclos ultradianos completos</strong> (~90-100 min/ciclo).
+        Se registraron <strong>${Math.floor(totMin/60)}h ${totMin%60}m de descanso</strong> estructurados en <strong>${cycles} ciclo/s ultradiano/s</strong> (~90-100 min/ciclo).
       </div>
     </div>
     <div style="display:flex; flex-direction:column; gap:0.4rem; font-size:0.75rem; color:var(--text-sub);">
-      <div>• <strong>Índice de Eficiencia:</strong> <span style="color:#10b981; font-weight:700;">${efficiency}%</span> (Estándar clínico AASM: óptimo &gt; 85%). Muestra una excelente continuidad sin fragmentación patológica.</div>
-      <div>• <strong>Latencia de Conciliación:</strong> <span style="color:var(--accent-orange); font-weight:700;">${latency} min</span>. Tiempo transcurrido en reposo hasta el inicio del primer huso de sueño N1/N2.</div>
-      <div>• <strong>Distribución de Fases:</strong> Profundo ${deepPct}%, REM ${remPct}%, Ligero ${lightPct}%, Vigilia ${awakePct}%. Cumple las proporciones biomédicas de restauración somatocelular y cognitiva.</div>
+      <div>• <strong>Índice de Eficiencia:</strong> <span style="color:#10b981; font-weight:700;">${efficiency}%</span> (Estándar clínico AASM: normal &gt; 85%). ${efficiency >= 85 ? 'Buena continuidad de reposo sin fragmentación patológica.' : 'Presencia de micro-despertares o inquietud motora.'}</div>
+      <div>• <strong>Latencia de Conciliación:</strong> <span style="color:var(--accent-orange); font-weight:700;">${latency} min</span>. Tiempo en reposo previo al primer huso de sueño.</div>
+      <div>• <strong>Distribución de Fases:</strong> Profundo ${deepPct}% (${deepMin}m), REM ${remPct}% (${remMin}m), Ligero ${lightPct}% (${lightMin}m), Vigilia ${awakePct}% (${awakeMin}m). ${phaseAssessmentText}</div>
     </div>
   `;
 
   // 2. Neurofisiología (Delta & REM)
+  const remWarning = totMin < 300 
+    ? `<div style="margin-top:0.35rem; padding:0.35rem 0.5rem; background:rgba(239,68,68,0.12); border-radius:6px; color:#f87171; font-size:0.72rem; font-weight:700;">
+        ⚠️ Mutilación de Fase REM: Al despertar a las ${Math.floor(totMin/60)} horas, se perdió el 60-70% del tiempo de REM que ocurre naturalmente en los ciclos 3, 4 y 5 de la madrugada.
+       </div>`
+    : '';
+
   const neuro = `
     <div style="display:flex; flex-direction:column; gap:0.6rem;">
       <div>
@@ -2039,6 +2085,7 @@ function generateMedicalDiagnosis(rep) {
         <div style="color:var(--text-sub); font-size:0.75rem;">
           Conocido como "terapia nocturna" (Matthew Walker), el sueño REM desactiva la noradrenalina cerebral para procesar memorias emocionales complejas sin estrés. Es la fase fundamental para la consolidación de la memoria procedural, la síntesis asociativa y la neuroplasticidad sináptica.
         </div>
+        ${remWarning}
       </div>
     </div>
   `;
@@ -2636,7 +2683,25 @@ function displayMorningReport(rep) {
   }
 
   document.getElementById('rep-date-lbl').textContent = rep.date || 'Anoche';
-  document.getElementById('rep-score').textContent = rep.sleep_score;
+  
+  const scoreEl = document.getElementById('rep-score');
+  if (scoreEl) {
+    scoreEl.textContent = rep.sleep_score;
+    if (rep.sleep_score >= 88) scoreEl.style.color = '#10b981';
+    else if (rep.sleep_score >= 78) scoreEl.style.color = '#38bdf8';
+    else if (rep.sleep_score >= 65) scoreEl.style.color = '#fbbf24';
+    else if (rep.sleep_score >= 50) scoreEl.style.color = '#fb923c';
+    else scoreEl.style.color = '#f87171';
+  }
+  const qualEl = document.getElementById('rep-score-quality');
+  if (qualEl) {
+    qualEl.textContent = `${rep.quality || 'Puntuación'} • /100`;
+    if (rep.sleep_score >= 88) qualEl.style.color = '#34d399';
+    else if (rep.sleep_score >= 78) qualEl.style.color = '#38bdf8';
+    else if (rep.sleep_score >= 65) qualEl.style.color = '#fbbf24';
+    else if (rep.sleep_score >= 50) qualEl.style.color = '#fb923c';
+    else qualEl.style.color = '#f87171';
+  }
   
   const titleEl = document.getElementById('rep-title');
   if (titleEl) {
@@ -2773,10 +2838,62 @@ function syncIndexedDbToLocalStorage() {
           updateNativeSleepWidget(localHist[0]);
         }
       }
+      upgradeHistoryScores();
       resolve();
     };
-    req.onerror = () => resolve();
+    req.onerror = () => {
+      upgradeHistoryScores();
+      resolve();
+    };
   });
+}
+
+function upgradeHistoryScores() {
+  try {
+    let hist = JSON.parse(localStorage.getItem('sinering_sleep_history') || '[]');
+    let modified = false;
+    hist = hist.map(session => {
+      const realSleep = session.total_sleep_minutes || session.total_duration_minutes || session.real_sleep_minutes || 0;
+      if (realSleep > 0) {
+        const isNap = session.is_nap || session.type === 'nap';
+        const deep = session.deep_sleep_minutes || 0;
+        const rem = session.rem_sleep_minutes || 0;
+        const light = session.light_sleep_minutes || 0;
+        const awake = session.awake_minutes || 0;
+        const { score, quality, efficiency } = computeClinicalSleepScore({
+          realSleepMinutes: realSleep,
+          deepMinutes: deep,
+          remMinutes: rem,
+          lightMinutes: light,
+          awakeMinutes: awake,
+          isNap
+        });
+        if (session.sleep_score !== score || session.quality !== quality) {
+          session.sleep_score = score;
+          session.quality = quality;
+          session.efficiency = efficiency;
+          modified = true;
+        }
+      }
+      return session;
+    });
+
+    if (modified) {
+      console.log("[ClinicalScore] ✅ Historial recalibrado con el modelo médico AASM.");
+      localStorage.setItem('sinering_sleep_history', JSON.stringify(hist));
+      if (db) {
+        const tx = db.transaction("sleep_sessions", "readwrite");
+        hist.forEach(s => tx.objectStore("sleep_sessions").put(s));
+      }
+      if (hist.length > 0) {
+        updateNativeSleepWidget(hist[0]);
+        displayMorningReport(hist[0]);
+      }
+      renderCalendar();
+    }
+  } catch(e) {
+    console.error("[ClinicalScore] Error recalibrando historial:", e);
+  }
 }
 
 function saveReportToHistory(report) {
@@ -2906,8 +3023,11 @@ function renderCalendar() {
       cell.classList.add('has-data');
       const score = session.sleep_score || 80;
       let badgeClass = 'score-good';
-      if (score >= 85) badgeClass = 'score-optimal';
-      else if (score < 70) badgeClass = 'score-fair';
+      if (score >= 88) badgeClass = 'score-optimal';
+      else if (score >= 78) badgeClass = 'score-good';
+      else if (score >= 65) badgeClass = 'score-fair';
+      else if (score >= 50) badgeClass = 'score-poor';
+      else badgeClass = 'score-critical';
 
       const badge = document.createElement('div');
       badge.className = `cal-score-badge ${badgeClass}`;
@@ -2966,7 +3086,28 @@ function displayHistoryDetail(session) {
   }
 
   document.getElementById('hist-detail-date').textContent = session.date || 'Noche';
-  document.getElementById('hist-detail-score').textContent = session.sleep_score || 80;
+  
+  const hScoreEl = document.getElementById('hist-detail-score');
+  if (hScoreEl) {
+    const sc = session.sleep_score || 80;
+    hScoreEl.textContent = sc;
+    if (sc >= 88) hScoreEl.style.color = '#10b981';
+    else if (sc >= 78) hScoreEl.style.color = '#38bdf8';
+    else if (sc >= 65) hScoreEl.style.color = '#fbbf24';
+    else if (sc >= 50) hScoreEl.style.color = '#fb923c';
+    else hScoreEl.style.color = '#f87171';
+  }
+
+  const hQualEl = document.getElementById('hist-detail-quality');
+  if (hQualEl) {
+    const sc = session.sleep_score || 80;
+    hQualEl.textContent = session.quality || '';
+    if (sc >= 88) hQualEl.style.color = '#34d399';
+    else if (sc >= 78) hQualEl.style.color = '#38bdf8';
+    else if (sc >= 65) hQualEl.style.color = '#fbbf24';
+    else if (sc >= 50) hQualEl.style.color = '#fb923c';
+    else hQualEl.style.color = '#f87171';
+  }
   
   const onset = session.sleep_onset_time || session.start_time;
   document.getElementById('hist-detail-range').textContent = `${onset} - ${session.end_time}`;

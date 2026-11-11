@@ -576,6 +576,18 @@
       border: 1px solid rgba(245, 158, 11, 0.4);
     }
 
+    .score-poor {
+      background: rgba(249, 115, 22, 0.2);
+      color: #fb923c;
+      border: 1px solid rgba(249, 115, 22, 0.4);
+    }
+
+    .score-critical {
+      background: rgba(239, 68, 68, 0.25);
+      color: #f87171;
+      border: 1px solid rgba(239, 68, 68, 0.5);
+    }
+
     /* Terminal de depuración plegable */
     #ble-console {
       max-height: 110px;
@@ -771,8 +783,8 @@
           <div id="rep-date-lbl" style="font-size:0.75rem; color:var(--text-sub);">Anoche</div>
         </div>
         <div style="text-align:right;">
-          <div id="rep-score" style="font-size:1.6rem; font-weight:900; color:var(--accent-cyan);">--</div>
-          <div style="font-size:0.65rem; color:var(--text-muted); font-weight:600;">PUNTUACIÓN / 100</div>
+          <div id="rep-score" style="font-size:1.6rem; font-weight:900; color:var(--accent-cyan); line-height:1.1;">--</div>
+          <div id="rep-score-quality" style="font-size:0.68rem; font-weight:800; color:var(--text-sub); text-transform:uppercase; margin-top:2px;">--</div>
         </div>
       </div>
 
@@ -918,7 +930,10 @@
           <div style="font-weight:700; font-size:0.95rem;">🔍 Detalle de la Noche</div>
           <div id="hist-detail-date" style="font-size:0.75rem; color:var(--text-sub);">--</div>
         </div>
-        <div id="hist-detail-score" style="font-size:1.5rem; font-weight:900; color:var(--accent-cyan);">--</div>
+        <div style="text-align:right;">
+          <div id="hist-detail-score" style="font-size:1.5rem; font-weight:900; color:var(--accent-cyan); line-height:1.1;">--</div>
+          <div id="hist-detail-quality" style="font-size:0.65rem; font-weight:800; color:var(--text-sub); text-transform:uppercase; margin-top:2px;">--</div>
+        </div>
       </div>
 
       <div style="display:flex; justify-content:space-between; margin-bottom:0.4rem; font-size:0.82rem;">
