@@ -4,4 +4,6 @@
     <string name="title_activity_main">SineRing Sleep</string>
     <string name="package_name">com.sinergia.sineringsleep</string>
     <string name="custom_url_scheme">com.sinergia.sineringsleep</string>
+    <string name="widget_name">Resumen de Sueño</string>
+    <string name="widget_description">Muestra el resumen, calidad y temperatura de la última noche.</string>
 </resources>

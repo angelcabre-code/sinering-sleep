@@ -1,0 +1,4 @@
+node_modules/
+download_qr.png
+.DS_Store
+*.log

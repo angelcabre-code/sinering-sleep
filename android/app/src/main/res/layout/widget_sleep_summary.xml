@@ -1,0 +1,282 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@drawable/widget_bg"
+    android:padding="12dp">
+
+    <!-- Fila Superior: Título y Fecha -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginBottom="6dp">
+
+        <ImageView
+            android:layout_width="18dp"
+            android:layout_height="18dp"
+            android:src="@mipmap/ic_launcher_round"
+            android:layout_marginEnd="6dp" />
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="SineRing Sleep"
+            android:textColor="#cbd5e1"
+            android:textSize="12sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/widget_date"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Última noche"
+            android:textColor="#94a3b8"
+            android:textSize="11sp" />
+    </LinearLayout>
+
+    <!-- Fila Central: Duración destacada y Puntuación/Calidad -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginBottom="6dp">
+
+        <!-- Columna Duración -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/widget_duration"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="--h --m"
+                android:textColor="#c084fc"
+                android:textSize="22sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Tiempo de descanso"
+                android:textColor="#64748b"
+                android:textSize="10sp" />
+        </LinearLayout>
+
+        <!-- Badge Puntuación de Sueño -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:gravity="center_horizontal"
+            android:background="@drawable/widget_score_badge"
+            android:paddingStart="10dp"
+            android:paddingEnd="10dp"
+            android:paddingTop="3dp"
+            android:paddingBottom="3dp">
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="bottom">
+
+                <TextView
+                    android:id="@+id/widget_score"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="--"
+                    android:textColor="#38bdf8"
+                    android:textSize="17sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="/100"
+                    android:textColor="#64748b"
+                    android:textSize="9sp"
+                    android:layout_marginStart="2dp"
+                    android:layout_marginBottom="1dp" />
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/widget_quality"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Sin datos"
+                android:textColor="#e2e8f0"
+                android:textSize="9sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- Fila Métricas Chips (Temp, Profundo, REM, Pulso) -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <!-- Chip Temp Cutánea -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:background="@drawable/widget_stat_chip"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:paddingTop="2dp"
+            android:paddingBottom="2dp"
+            android:layout_marginEnd="3dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="🌡️ Temp"
+                android:textColor="#f59e0b"
+                android:textSize="8sp" />
+
+            <TextView
+                android:id="@+id/widget_temp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="--.- °C"
+                android:textColor="#f8fafc"
+                android:textSize="10sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <!-- Chip Sueño Profundo -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:background="@drawable/widget_stat_chip"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:paddingTop="2dp"
+            android:paddingBottom="2dp"
+            android:layout_marginEnd="3dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="🟣 Prof"
+                android:textColor="#818cf8"
+                android:textSize="8sp" />
+
+            <TextView
+                android:id="@+id/widget_deep"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="--h --m"
+                android:textColor="#f8fafc"
+                android:textSize="10sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <!-- Chip Sueño REM -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:background="@drawable/widget_stat_chip"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:paddingTop="2dp"
+            android:paddingBottom="2dp"
+            android:layout_marginEnd="3dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="🌸 REM"
+                android:textColor="#f472b6"
+                android:textSize="8sp" />
+
+            <TextView
+                android:id="@+id/widget_rem"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="--h --m"
+                android:textColor="#f8fafc"
+                android:textSize="10sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <!-- Chip Pulso Medio -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:background="@drawable/widget_stat_chip"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:paddingTop="2dp"
+            android:paddingBottom="2dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="❤️ Pulso"
+                android:textColor="#ef4444"
+                android:textSize="8sp" />
+
+            <TextView
+                android:id="@+id/widget_hr"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="-- lpm"
+                android:textColor="#f8fafc"
+                android:textSize="10sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- Mini Gráfica de Hipnograma de la Noche -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_marginTop="6dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="2dp">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Arquitectura del sueño"
+                android:textColor="#94a3b8"
+                android:textSize="8sp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="🟣 Prof  🌸 REM  🔵 Lig  🟡 Desp"
+                android:textColor="#64748b"
+                android:textSize="7.5sp" />
+        </LinearLayout>
+
+        <ImageView
+            android:id="@+id/widget_sleep_chart"
+            android:layout_width="match_parent"
+            android:layout_height="24dp"
+            android:scaleType="fitXY" />
+    </LinearLayout>
+
+</LinearLayout>
