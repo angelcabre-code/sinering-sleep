@@ -64,6 +64,13 @@ public class SleepWidgetProvider extends AppWidgetProvider {
             PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent, flags);
             views.setOnClickPendingIntent(R.id.widget_root, pendingIntent);
 
+            // Botón de sincronización rápida en el widget
+            Intent syncIntent = new Intent(context, MainActivity.class);
+            syncIntent.setAction(MorningSyncReceiver.ACTION_AUTO_SYNC);
+            syncIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+            PendingIntent syncPendingIntent = PendingIntent.getActivity(context, 1003, syncIntent, flags);
+            views.setOnClickPendingIntent(R.id.widget_sync_btn, syncPendingIntent);
+
             appWidgetManager.updateAppWidget(appWidgetId, views);
         }
     }

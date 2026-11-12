@@ -1336,6 +1336,38 @@
         <div>✨ <strong>Métricas del widget:</strong> Duración del descanso, puntuación y calidad de sueño, temperatura cutánea 🌡️, desglose Profundo/REM y pulso medio.</div>
         <div style="margin-top:0.45rem; color:var(--accent-cyan);">💡 <em>Para añadirlo: Mantén pulsado un espacio vacío en tu pantalla de inicio de Android > Widgets > SineRing Sleep.</em></div>
       </div>
+
+      <!-- Configuración de Sincronización Automática Matutina del Widget -->
+      <div class="sub-card" style="margin-top:0.7rem; font-size:0.75rem;">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:0.5rem;">
+          <strong style="color:var(--text-main);">🌅 Sincronización Matutina Automática</strong>
+          <input type="checkbox" id="chk-auto-morning-sync" style="transform:scale(1.2); cursor:pointer;" onchange="onAutoMorningSyncChange()">
+        </div>
+        <div style="font-size:0.72rem; color:var(--text-sub); margin-bottom:0.6rem; line-height:1.4;">
+          Actualiza el widget silenciosamente en segundo plano sin necesidad de entrar a la app.
+        </div>
+
+        <div id="box-morning-sync-options" style="display:flex; flex-direction:column; gap:0.45rem;">
+          <div>
+            <span style="font-size:0.7rem; color:var(--text-sub); display:block; margin-bottom:0.2rem;">Momento de actualización:</span>
+            <select id="sel-morning-sync-strategy" class="glass-select" onchange="onAutoMorningSyncChange()">
+              <option value="1h" selected>1 hora tras despertar (Al desbloquear móvil + 60 min)</option>
+              <option value="30m">30 minutos tras despertar (Al desbloquear móvil + 30 min)</option>
+              <option value="immediate">Inmediata al despertar (Primer encendido de pantalla)</option>
+              <option value="fixed">A una hora fija programada</option>
+            </select>
+          </div>
+
+          <div id="box-fixed-hour" style="display:none; margin-top:0.2rem;">
+            <span style="font-size:0.7rem; color:var(--text-sub); display:block; margin-bottom:0.2rem;">Hora fija matutina:</span>
+            <input type="time" id="time-morning-fixed" value="08:30" class="glass-select" style="padding:0.4rem 0.6rem;" onchange="onAutoMorningSyncChange()">
+          </div>
+
+          <div style="font-size:0.7rem; color:#10b981; line-height:1.35; margin-top:0.3rem;">
+            ✓ <strong>Consumo de batería cero:</strong> El teléfono permanece en reposo profundo (Doze) toda la noche. Solo realiza 1 única sincronización de 2 segundos al día.
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- 9. Créditos y Autoría: Psicología y Sinergia -->

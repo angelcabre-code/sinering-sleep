@@ -37,6 +37,16 @@
             android:text="Última noche"
             android:textColor="#94a3b8"
             android:textSize="11sp" />
+
+        <TextView
+            android:id="@+id/widget_sync_btn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text=" 🔄"
+            android:textColor="#38bdf8"
+            android:textSize="12sp"
+            android:paddingStart="4dp"
+            android:paddingEnd="2dp" />
     </LinearLayout>
 
     <!-- Fila Central: Duración destacada y Puntuación/Calidad -->

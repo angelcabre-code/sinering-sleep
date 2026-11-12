@@ -68,12 +68,26 @@
                 android:resource="@xml/sleep_widget_info" />
         </receiver>
 
+        <!-- Receptor de sincronización matutina automática (Desbloqueo matutino, Alarma y Boot) -->
+        <receiver
+            android:name=".MorningSyncReceiver"
+            android:enabled="true"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.USER_PRESENT" />
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="com.sinergia.sineringsleep.ACTION_AUTO_SYNC" />
+            </intent-filter>
+        </receiver>
+
     </application>
 
     <!-- Permissions -->
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
     <uses-permission android:name="android.permission.BLUETOOTH" android:maxSdkVersion="30" />
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" android:maxSdkVersion="30" />
     <uses-permission android:name="android.permission.BLUETOOTH_SCAN" android:usesPermissionFlags="neverForLocation" />

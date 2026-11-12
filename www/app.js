@@ -2344,6 +2344,119 @@ function saveSessionRecord(report) {
 }
 
 // -------------------------------------------------------------
+// 5.b.2 SINCRONIZACIÓN MATUTINA AUTOMÁTICA DEL WIDGET (COLMI R09)
+// -------------------------------------------------------------
+let isAutoSyncRunning = false;
+
+window.onAutoMorningSync = async function(force = false) {
+  if (isAutoSyncRunning) {
+    console.log("[MorningSync] Auto-sync ya en progreso, ignorando llamada duplicada.");
+    return;
+  }
+
+  const todayStr = new Date().toISOString().slice(0, 10);
+  const lastSyncDate = localStorage.getItem('sinering_last_auto_sync_date');
+
+  // Si no es forzado y ya se sincronizó hoy, no saturar
+  if (!force && lastSyncDate === todayStr) {
+    console.log("[MorningSync] Datos de hoy ya sincronizados previamente (" + todayStr + "). Omitiendo.");
+    return;
+  }
+
+  isAutoSyncRunning = true;
+  console.log("[MorningSync] 🌅 Iniciando sincronización matutina automática...", { force, todayStr });
+
+  try {
+    const devId = connectedDeviceId || localStorage.getItem("sinering_sleep_device_id");
+    if (!devId) {
+      console.warn("[MorningSync] No hay ningún anillo vinculado para sincronizar.");
+      return;
+    }
+
+    if (!isConnected) {
+      console.log("[MorningSync] Anillo desconectado. Conectando a " + devId + "...");
+      await connectToDevice(devId);
+      // connectToDevice ejecuta handshake y syncRingData internamente
+    } else {
+      console.log("[MorningSync] Anillo conectado. Solicitando datos de sueño...");
+      await syncRingData();
+    }
+
+    localStorage.setItem('sinering_last_auto_sync_date', todayStr);
+    console.log("[MorningSync] ✅ Sincronización matutina completada con éxito.");
+  } catch (err) {
+    console.error("[MorningSync] Error durante la sincronización matutina:", err);
+  } finally {
+    isAutoSyncRunning = false;
+  }
+};
+
+function loadMorningSyncConfig() {
+  const chkAuto = document.getElementById('chk-auto-morning-sync');
+  const selStrat = document.getElementById('sel-morning-sync-strategy');
+  const timeFixed = document.getElementById('time-morning-fixed');
+  const boxFixed = document.getElementById('box-fixed-hour');
+  const boxOptions = document.getElementById('box-morning-sync-options');
+
+  const enabled = localStorage.getItem('sinering_morning_sync_enabled') !== 'false'; // por defecto activado
+  const strategy = localStorage.getItem('sinering_morning_sync_strategy') || '1h';
+  const fixedTime = localStorage.getItem('sinering_morning_sync_time') || '08:30';
+
+  if (chkAuto) chkAuto.checked = enabled;
+  if (selStrat) selStrat.value = strategy;
+  if (timeFixed) timeFixed.value = fixedTime;
+
+  if (boxOptions) boxOptions.style.display = enabled ? 'flex' : 'none';
+  if (boxFixed) boxFixed.style.display = strategy === 'fixed' ? 'block' : 'none';
+
+  // Sincronizar con el plugin nativo de Android
+  try {
+    const plugin = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.SleepWidget;
+    if (plugin && plugin.configureMorningSync) {
+      plugin.configureMorningSync({
+        enabled: enabled,
+        strategy: strategy,
+        fixedTime: fixedTime
+      });
+    }
+  } catch(e) {
+    console.warn("[MorningSync] Error configurando plugin nativo:", e);
+  }
+}
+
+function onAutoMorningSyncChange() {
+  const chkAuto = document.getElementById('chk-auto-morning-sync');
+  const selStrat = document.getElementById('sel-morning-sync-strategy');
+  const timeFixed = document.getElementById('time-morning-fixed');
+  const boxFixed = document.getElementById('box-fixed-hour');
+  const boxOptions = document.getElementById('box-morning-sync-options');
+
+  const enabled = chkAuto ? chkAuto.checked : true;
+  const strategy = selStrat ? selStrat.value : '1h';
+  const fixedTime = timeFixed ? timeFixed.value : '08:30';
+
+  localStorage.setItem('sinering_morning_sync_enabled', enabled ? 'true' : 'false');
+  localStorage.setItem('sinering_morning_sync_strategy', strategy);
+  localStorage.setItem('sinering_morning_sync_time', fixedTime);
+
+  if (boxOptions) boxOptions.style.display = enabled ? 'flex' : 'none';
+  if (boxFixed) boxFixed.style.display = strategy === 'fixed' ? 'block' : 'none';
+
+  try {
+    const plugin = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.SleepWidget;
+    if (plugin && plugin.configureMorningSync) {
+      plugin.configureMorningSync({
+        enabled: enabled,
+        strategy: strategy,
+        fixedTime: fixedTime
+      });
+    }
+  } catch(e) {
+    console.warn("[MorningSync] Error guardando config nativa:", e);
+  }
+}
+
+// -------------------------------------------------------------
 // 5.c GOOGLE HEALTH CONNECT (SINCRONIZACIÓN DE SALUD NATIVA)
 // -------------------------------------------------------------
 let isHealthConnectAvailable = false;
@@ -3493,6 +3606,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   renderHistoryList();
   updateSettingsUI();
   checkHealthConnectStatus();
+  loadMorningSyncConfig();
 
   // Mostrar último reporte guardado si existe y sincronizar widget nativo
   try {
@@ -3502,6 +3616,39 @@ document.addEventListener("DOMContentLoaded", async () => {
       updateNativeSleepWidget(hist[0]);
     }
   } catch(e) {}
+
+  // Verificar si la app fue despertada por una alarma nativa o botón del widget
+  try {
+    const widgetPlugin = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.SleepWidget;
+    if (widgetPlugin && widgetPlugin.checkPendingAutoSync) {
+      widgetPlugin.checkPendingAutoSync().then(res => {
+        if (res && res.pending) {
+          console.log("[MorningSync] Detectada orden de auto-sync pendiente al arrancar. Ejecutando...");
+          setTimeout(() => {
+            if (typeof window.onAutoMorningSync === 'function') {
+              window.onAutoMorningSync(true);
+            }
+          }, 1200);
+        }
+      });
+    }
+  } catch(e) {}
+
+  // Verificación periódica matutina (entre 06:00 y 12:00) si la app sigue viva en memoria
+  setInterval(() => {
+    const hour = new Date().getHours();
+    if (hour >= 6 && hour < 12) {
+      const todayStr = new Date().toISOString().slice(0, 10);
+      const lastSync = localStorage.getItem('sinering_last_auto_sync_date');
+      const isEnabled = localStorage.getItem('sinering_morning_sync_enabled') !== 'false';
+      if (isEnabled && lastSync !== todayStr && isConnected) {
+        console.log("[MorningSync] Sincronización matutina periódica silenciosa activada...");
+        if (typeof window.onAutoMorningSync === 'function') {
+          window.onAutoMorningSync(false);
+        }
+      }
+    }
+  }, 15 * 60 * 1000);
 
   // Iniciar BLE nativo
   await initNativeBle();
